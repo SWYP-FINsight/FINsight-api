@@ -1,0 +1,20 @@
+spring:
+  profiles:
+    active: dev
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${MYSQL_DEV_HOST}/${MYSQL_DEV_DBNAME}
+    username: ${MYSQL_DEV_USERNAME}
+    password: ${MYSQL_DEV_PASSWORD}
+
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        ddl-auto: create
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+
+logging:
+  level:
+    org.hibernate.SQL: debug
