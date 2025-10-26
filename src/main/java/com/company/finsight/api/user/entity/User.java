@@ -9,6 +9,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -29,8 +31,15 @@ public class User {
     @Column(name = "user_id")
     private Long id;
 
+    @Column(nullable = false, unique = true)
     private String username; // 로그인용 아이디
+
+    @Column(nullable = false)
     private String password;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -40,12 +49,16 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    private User(String username, String password) {
+    private User(String username, String password, Role role) {
         this.username = username;
         this.password = password;
+        this.role = role;
     }
 
     public static User create(String username, String password) {
-        return new User(username, password);
+        return new User(
+            username,
+            password,
+            Role.USER);
     }
 }
