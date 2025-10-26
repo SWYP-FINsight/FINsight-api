@@ -7,6 +7,8 @@ on:
 jobs:
   delete_merged_branch:
     if: github.event.pull_request.merged == true
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - name: Delete branch
