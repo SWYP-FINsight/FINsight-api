@@ -1,7 +1,4 @@
 spring:
-  profiles:
-    active: dev
-
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://${POSTGRES_DEV_HOST}:${POSTGRES_DEV_PORT:5432}/${POSTGRES_DEV_DBNAME}
