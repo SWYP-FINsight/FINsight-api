@@ -58,15 +58,15 @@ public class ArticleParser {
 
                             log.debug("Parsed article: {}", dto);
                         } else {
-                            log.warn("Skipping article element due to missing fields (title, summary, or time). CID: {}", cid);
+                            log.warn("필드가 없을 경우 (title, summary, time). CID: {}", cid);
                         }
                     } catch (Exception e) {
                         // 특정 기사 파싱 중 에러 발생 시 로그 남기고 계속 진행
-                        log.error("Error parsing article element: {}", articleElement.html(), e);
+                        log.error("파싱 실패 : {}", articleElement.html(), e);
                     }
                 }
             }
-            log.info("Successfully parsed {} articles from category '{}'", articleDtoList.size(), categoryName);
+            log.info("파싱 성공 개수 {} 카테고리 : {}", articleDtoList.size(), categoryName);
             return articleDtoList;
         });
     }
@@ -80,7 +80,7 @@ public class ArticleParser {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
             return LocalDateTime.parse(yearAndTimeStr, formatter);
         } catch (Exception e) {
-            log.warn("Failed to parse approximate datetime: {}", timeStr, e);
+            log.warn("시간 변환 실패: {}", timeStr, e);
             return null;
         }
     }
