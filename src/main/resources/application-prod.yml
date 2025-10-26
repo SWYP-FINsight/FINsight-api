@@ -1,3 +1,20 @@
 spring:
   profiles:
     active: prod
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${POSTGRES_PROD_HOST}:${POSTGRES_PROD_PORT:5432}/${POSTGRES_PROD_DBNAME}
+    username: ${POSTGRES_PROD_USERNAME}
+    password: ${POSTGRES_PROD_PASSWORD}
+
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        ddl-auto: validate
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+logging:
+  level:
+    org.hibernate.SQL: warn
