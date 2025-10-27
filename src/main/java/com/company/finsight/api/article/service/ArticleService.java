@@ -50,7 +50,6 @@ public class ArticleService {
                     .publishOn(Schedulers.boundedElastic())
                     .doOnNext(articleContent -> {
                         log.info("본문 {} : 기자 {}", articleContent.getContent(), articleContent.getReporter());
-                        // TODO 키워드 세팅
                         Article article = Article.create(
                             articleSummary.getArticleCid(), articleSummary.getTitle(), articleSummary.getSummary(),
                             articleContent.getContent(), articleSummary.getCategory(), articleContent.getReporter(),
