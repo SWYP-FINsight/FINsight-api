@@ -1,6 +1,7 @@
 package com.company.finsight.api.article.service;
 
-import com.company.finsight.api.article.dto.ArticleDto;
+import com.company.finsight.api.article.dto.ArticleContentDto;
+import com.company.finsight.api.article.dto.ArticleSummaryDto;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -18,9 +19,9 @@ import java.util.List;
 @Component
 public class ArticleParser {
 
-    public Mono<List<ArticleDto>> parseArticleList(String htmlContent, String categoryName) {
+    public Mono<List<ArticleSummaryDto>> parseArticleList(String htmlContent, String categoryName, String baseUrl) {
         return Mono.fromCallable(() -> {
-            List<ArticleDto> articleDtoList = new ArrayList<>();
+            List<ArticleSummaryDto> articleDtoList = new ArrayList<>();
             Document doc = Jsoup.parse(htmlContent);
             Elements articleElements = doc.select("div.list-type212 > ul.list01 > li");
 
@@ -44,13 +45,13 @@ public class ArticleParser {
                             // 시간 파싱
                             LocalDateTime publishedAt = parseApproximateDateTime(timeStr);
 
-                            ArticleDto dto = ArticleDto.builder()
+                            ArticleSummaryDto dto = ArticleSummaryDto.builder()
                                     .articleCid(cid)
                                     .title(title)
                                     .summary(summary)
                                     .category(categoryName)
                                     .source("연합뉴스")
-                                    .articleUrl(fullUrl)
+                                    .articleUrl(fullUrl.replace(baseUrl, ""))
                                     .thumbnailUrl(thumbnailUrl)
                                     .publishedAt(publishedAt)
                                     .build();
@@ -68,6 +69,64 @@ public class ArticleParser {
             }
             log.info("파싱 성공 개수 {} 카테고리 : {}", articleDtoList.size(), categoryName);
             return articleDtoList;
+        });
+    }
+
+    public Mono<ArticleContentDto> parseArticleContent(String htmlContent) {
+        return Mono.fromCallable(() -> {
+            Document doc = Jsoup.parse(htmlContent);
+            Element articleBodyElement = doc.selectFirst("article#articleWrap div.story-news.article");
+            String content = "";
+            if (articleBodyElement != null) {
+                content = articleBodyElement.text();
+
+                // 광고 문구 제거
+                content = content.replaceFirst("^\\s*\\([^)]+\\)\\s*", "").trim();
+
+                String emailDomain = "@yna.co.kr";
+                int emailDomainIndex = content.indexOf(emailDomain); // "@yna.co.kr" 시작 위치 찾기
+
+                if (emailDomainIndex != -1) {
+                    int endIndex = emailDomainIndex + emailDomain.length();
+                    content = content.substring(0, endIndex).trim();
+                } else {
+                    // 이메일 주소가 없는 경우
+                    int jeboIndex = content.indexOf("제보");
+                    if (jeboIndex != -1) {
+                        content = content.substring(0, jeboIndex).trim();
+                    }
+                    // 저작권 문구
+                    int copyrightIndex = content.indexOf("<저작권자(c) 연합뉴스");
+                    if (copyrightIndex != -1) {
+                        content = content.substring(0, copyrightIndex).trim();
+                    }
+                }
+
+            } else {
+                log.warn("Article body element not found.");
+            }
+
+            // 작성자 이름 추출
+            Element reporterElement = doc.selectFirst("div.writer-zone01 strong.tit-name > a");
+            String reporter = "";
+            if (reporterElement != null) {
+                reporter = reporterElement.text();
+            } else {
+                // 작성자 정보가 없는 기사
+                log.info("작성자 파악 불가");
+                // 또는 메타 태그에서 시도
+                Element metaAuthor = doc.selectFirst("meta[name=author]");
+                if (metaAuthor != null) {
+                    reporter = metaAuthor.attr("content");
+                }
+            }
+
+            if (!content.isEmpty() || !reporter.isEmpty()) {
+                return new ArticleContentDto(content, reporter);
+            } else {
+                log.warn("본문, 작성자 파싱 실패.");
+                return null;
+            }
         });
     }
 
