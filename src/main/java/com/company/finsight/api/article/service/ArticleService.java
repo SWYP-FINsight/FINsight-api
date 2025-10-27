@@ -36,9 +36,7 @@ public class ArticleService {
                     log.info("파싱 결과 개수 : {}, 카테고리 : {}", articleList.size(), category);
                     callContent(articleList);
                 })
-                .doOnError(error -> {
-                    log.error("크롤링 실패 카테고리 : {}", category, error);
-                })
+                .doOnError(error -> log.error("크롤링 실패 카테고리 : {}", category, error))
                 .subscribe(); // 실행
         log.info("스케줄링 종료...");
     }
@@ -58,9 +56,7 @@ public class ArticleService {
                         );
                         articleRepository.save(article);
                     })
-                    .doOnError(error -> {
-                        log.error("본문 크롤링 실패 : {}", articleSummary.getArticleCid(), error);
-                    })
+                    .doOnError(error -> log.error("본문 크롤링 실패 : {}", articleSummary.getArticleCid(), error))
                     .subscribe();
 
             // 크롤링 대기 시간 설정
