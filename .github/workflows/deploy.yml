@@ -1,0 +1,133 @@
+# workflow 이름
+name: finsight-ci/cd
+
+# Event : 실행되는 시점을 설정
+# dev 이라는 브랜치에 push 될 때 아래 workflow를 실행
+on:
+  push:
+    branches:
+      - dev
+
+# 하나의 workflow는 1개 이상의 job으로 구성된다.
+# 여러 job은 기본적으로 병렬적으로 수행된다.
+jobs:
+  # job을 식별하기 위한 id
+  build-and-deploy:
+    # ubuntu 환경 / 가장 최신 버전(latest)
+    runs-on: ubuntu-latest
+    # Step : 특정 작업을 수행하는 가장 작은 단위
+    # Job은 여러 Step들로 구성되어 있다.
+    steps:
+      # ==================================
+      # 1단계: 소스 코드 체크아웃
+      # ==================================
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      # ==================================
+      # 2단계: JDK 17 설정
+      # ==================================
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # ==================================
+      # 3단계: Gradle 캐시 설정
+      # 빌드 속도 향상을 위해 Gradle 의존성 캐싱
+      # ==================================
+      - name: Cache Gradle packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      # ==================================
+      # 4단계: Gradle 빌드
+      # bootJar: 실행 가능한 JAR 파일 생성
+      # -x test: 테스트 제외 (빠른 빌드)
+      # ==================================
+      - name: Build with Gradle
+        run: |
+          chmod +x ./gradlew
+          ./gradlew clean bootJar -x test
+
+      # ==================================
+      # 5단계: Docker Hub 로그인
+      # 빌드한 이미지를 Docker Hub에 업로드하기 위해 로그인
+      # ==================================
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # ==================================
+      # 6단계: Docker 이미지 빌드 및 푸시
+      # Dockerfile을 사용해 이미지 생성 후 Docker Hub에 업로드
+      # ==================================
+      - name: Build and Push Docker Image
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/finsight:latest .
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/finsight:latest
+
+      # ==================================
+      # 7단계: NCP 서버에 배포
+      # SSH로 서버 접속 후 Docker 컨테이너 재시작
+      # ==================================
+      - name: Deploy to NCP Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.NCP_SERVER_IP }}
+          username: root
+          key: ${{ secrets.NCP_SSH_KEY }}
+          script: |
+            cd /root/finsight-app
+            
+            cat > .env.prod << EOF
+            POSTGRES_PROD_HOST=${{ secrets.POSTGRES_PROD_HOST }}
+            POSTGRES_PROD_PORT=${{ secrets.POSTGRES_PROD_PORT }}
+            POSTGRES_PROD_DBNAME=${{ secrets.POSTGRES_PROD_DBNAME }}
+            POSTGRES_PROD_USERNAME=${{ secrets.POSTGRES_PROD_USERNAME }}
+            POSTGRES_PROD_PASSWORD=${{ secrets.POSTGRES_PROD_PASSWORD }}
+            EOF
+            
+            # Docker Compose에서 사용할 환경변수 설정
+            export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
+            
+            # 기존 컨테이너 중지 및 삭제
+            # || true: 실패해도 계속 진행 (처음 배포 시 컨테이너 없을 수 있음)
+            docker-compose -f docker-compose.prod.yml down || true
+            
+            # Docker Hub에서 새 이미지 다운로드
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/finsight:latest
+            
+            # 사용하지 않는 Docker 이미지 정리 (디스크 공간 확보)
+            docker image prune -f
+            
+            # 새 컨테이너 시작 (백그라운드)
+            docker-compose -f docker-compose.prod.yml up -d
+            
+            # 배포 후 로그 확인 (최근 50줄)
+            docker-compose -f docker-compose.prod.yml logs --tail=50
+            
+            # 컨테이너 상태 확인 (실행 중인지 확인)
+            docker-compose -f docker-compose.prod.yml ps
+
+      # ==================================
+      # 8단계: 배포 결과 알림
+      # 성공/실패 여부를 GitHub Actions 로그에 출력
+      # ==================================
+      - name: Deployment Status
+        if: always()
+        run: |
+          if [ ${{ job.status }} == 'success' ]; then
+            echo "✅ 배포 성공!"
+          else
+            echo "❌ 배포 실패!"
+          fi
