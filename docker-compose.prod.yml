@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  finsight-app:
+    image: ${DOCKERHUB_USERNAME}/finsight:latest
+    container_name: finsight-app
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env.prod
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - TZ=Asia/Seoul
