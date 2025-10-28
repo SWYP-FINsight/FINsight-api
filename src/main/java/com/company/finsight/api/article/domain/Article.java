@@ -40,7 +40,7 @@ public class Article {
     private String source;
 
     @Column(name = "keywords")
-    private String keywords;
+    private String keyword;
 
     @Column(name = "article_url", unique = true, nullable = false)
     private String articleUrl;
@@ -85,7 +85,7 @@ public class Article {
             String category,
             String reporter,
             String source,
-            String keywords,
+            String keyword,
             String articleUrl,
             String thumbnailUrl,
             LocalDateTime publishedAt
@@ -98,7 +98,7 @@ public class Article {
         article.category = category;
         article.reporter = reporter;
         article.source = source;
-        article.keywords = keywords;
+        article.keyword = keyword;
         article.articleUrl = articleUrl;
         article.thumbnailUrl = thumbnailUrl;
         article.publishedAt = publishedAt;
