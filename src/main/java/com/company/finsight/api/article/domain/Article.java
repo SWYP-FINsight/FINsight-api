@@ -71,7 +71,7 @@ public class Article {
      * @param category 카테고리
      * @param reporter 기자 이름
      * @param source 뉴스 출처
-     * @param keywords 키워드
+     * @param keyword 키워드
      * @param articleUrl 기사 원문 URL
      * @param thumbnailUrl 썸네일 이미지 URL
      * @param publishedAt 기사 발행 시간
