@@ -104,34 +104,4 @@ public class Article {
         article.publishedAt = publishedAt;
         return article;
     }
-
-    /**
-     * 필수 필드만으로 Article 엔티티 생성
-     *
-     * @param articleCid 연합뉴스 기사 고유 ID
-     * @param title 기사 제목
-     * @param articleUrl 기사 원문 URL
-     * @param publishedAt 기사 발행 시간
-     * @return Article 엔티티
-     */
-    public static Article createWithRequired(
-            String articleCid,
-            String title,
-            String articleUrl,
-            LocalDateTime publishedAt
-    ) {
-        return create(
-                articleCid,
-                title,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                articleUrl,
-                null,
-                publishedAt
-        );
-    }
 }
