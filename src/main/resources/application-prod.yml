@@ -8,10 +8,12 @@ spring:
 
   jpa:
     show-sql: true
+    hibernate:
+      ddl-auto: create
     properties:
-      default_schema: public
       hibernate:
-        ddl-auto: create # 개발 끝나기 전까지는 update로 해놓겠습니다.
+        default_schema: public
+
     database-platform: org.hibernate.dialect.PostgreSQLDialect
 
 logging:
