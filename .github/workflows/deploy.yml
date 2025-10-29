@@ -77,7 +77,20 @@ jobs:
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/finsight:latest
 
       # ==================================
-      # 7단계: NCP 서버에 배포
+      # 7단계: 서버로 파일 전송
+      # docker-compose.prod.yml 파일을 서버로 복사
+      # ==================================
+      - name: Copy docker-compose.prod.yml to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.NCP_SERVER_IP }}
+          username: root
+          key: ${{ secrets.NCP_SSH_KEY }}
+          source: "docker-compose.prod.yml"
+          target: "/root/finsight-app"
+
+      # ==================================
+      # 8단계: NCP 서버에 배포
       # SSH로 서버 접속 후 Docker 컨테이너 재시작
       # ==================================
       - name: Deploy to NCP Server
@@ -88,7 +101,7 @@ jobs:
           key: ${{ secrets.NCP_SSH_KEY }}
           script: |
             cd /root/finsight-app
-            
+
             cat > .env.prod << EOF
             POSTGRES_PROD_HOST=${{ secrets.POSTGRES_PROD_HOST }}
             POSTGRES_PROD_PORT=${{ secrets.POSTGRES_PROD_PORT }}
