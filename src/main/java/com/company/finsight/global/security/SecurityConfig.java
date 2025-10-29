@@ -6,6 +6,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,9 +20,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
             .cors(cors -> cors.configure(http)) // CORS 활성화 (WebConfig의 설정 사용)
-            .csrf(csrf -> csrf.disable()) // csrf 비활성화
-            .formLogin(login -> login.disable()) // security 로그인 비활성화(커스텀 로그인 API 사용 예정)
-            .httpBasic(basic -> basic.disable()) // http basic 비활성화
+            .csrf(AbstractHttpConfigurer::disable) // csrf 비활성화
+            .formLogin(AbstractHttpConfigurer::disable) // security 로그인 비활성화(커스텀 로그인 API 사용 예정)
+            .httpBasic(AbstractHttpConfigurer::disable) // http basic 비활성화
 
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) // 필요 시 세션 생성: 로그인 성공 시 세션 생성
