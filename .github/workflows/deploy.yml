@@ -84,10 +84,11 @@ jobs:
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.NCP_SERVER_IP }}
-          username: root
+          username: ubuntu
+          port: 22
           key: ${{ secrets.NCP_SSH_KEY }}
           script: |
-            cd /root/finsight-app
+            cd /home/ubuntu/finsight-app
             
             cat > .env.prod << EOF
             POSTGRES_PROD_HOST=${{ secrets.POSTGRES_PROD_HOST }}
