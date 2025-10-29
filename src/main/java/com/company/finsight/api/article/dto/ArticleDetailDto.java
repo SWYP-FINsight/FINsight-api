@@ -13,15 +13,12 @@ import java.time.LocalDateTime;
 public class ArticleDetailDto {
     private Long id;
     private String title;
-    private String summary;
+    private String subject;
+    private String distributor;
+    private LocalDateTime timestamp;
     private String content;
-    private String category;
     private String reporter;
     private String source;
-    private String keywords;
-    private String articleUrl;
-    private String thumbnailUrl;
-    private LocalDateTime publishedAt;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private String importance;
+    private String keyword;
 }

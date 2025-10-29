@@ -5,15 +5,14 @@ import com.company.finsight.api.article.domain.Article;
 import com.company.finsight.api.article.dto.ArticleDetailDto;
 import com.company.finsight.api.article.dto.ArticleSummaryDto;
 import com.company.finsight.api.article.dto.ArticlesDto;
-import com.company.finsight.api.article.exception.ArticleErrorCode;
-import com.company.finsight.api.article.exception.ArticleException;
+import com.company.finsight.global.exception.business.article.ArticleErrorCode;
+import com.company.finsight.global.exception.business.article.ArticleException;
 import com.company.finsight.api.article.repository.ArticleRepository;
 import com.company.finsight.global.Const;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import reactor.core.scheduler.Schedulers;
 
@@ -64,17 +63,14 @@ public class ArticleService {
         return new ArticleDetailDto(
                 article.getId(),
                 article.getTitle(),
-                article.getSummary(),
+                article.getSummary(),          
+                article.getSource(),           
+                article.getPublishedAt(),      
                 article.getContent(),
-                article.getCategory(),
                 article.getReporter(),
-                article.getSource(),
-                article.getKeyword(),
-                article.getArticleUrl(),
-                article.getThumbnailUrl(),
-                article.getPublishedAt(),
-                article.getCreatedAt(),
-                article.getUpdatedAt()
+                article.getArticleUrl(),       
+                null,                          // TODO importance (향후 구현 예정)
+                article.getKeyword()           
         );
     }
 
