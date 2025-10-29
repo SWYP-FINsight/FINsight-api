@@ -1,6 +1,4 @@
 spring:
-  profiles:
-    active: prod
 
   datasource:
     driver-class-name: org.postgresql.Driver
@@ -12,7 +10,7 @@ spring:
     show-sql: false
     properties:
       hibernate:
-        ddl-auto: update # 개발 끝나기 전까지는 update로 해놓겠습니다.
+        ddl-auto: create # 개발 끝나기 전까지는 update로 해놓겠습니다.
     database-platform: org.hibernate.dialect.PostgreSQLDialect
 
 logging:
