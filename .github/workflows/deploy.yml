@@ -86,7 +86,7 @@ jobs:
           host: ${{ secrets.NCP_SERVER_IP }}
           username: ubuntu
           port: 22
-          password: ${{ secrets.NCP_SSH_PASSWORD }}
+          key: ${{ secrets.NCP_SSH_KEY }}
           script: |
             cd /home/ubuntu/finsight-app
             
