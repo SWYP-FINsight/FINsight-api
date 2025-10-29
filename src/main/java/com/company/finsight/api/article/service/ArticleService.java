@@ -75,7 +75,7 @@ public class ArticleService {
         );
     }
 
-    @Scheduled(fixedRate = 900000)
+    //@Scheduled(fixedRate = 900000)
     public void test() {
         log.info("스케줄링 시작...");
         String category = "산업/기업"; // 현재 크롤링 중인 카테고리명
@@ -115,8 +115,8 @@ public class ArticleService {
                 int min = 5000;
                 int max = 15000;
                 int randomNumber = random.nextInt(max - min + 1) + min;
+                log.info("본문 조회 성공");
                 Thread.sleep(randomNumber);
-                log.info("저장 성공");
             } catch (InterruptedException e) {
                 log.error(e.getMessage(), e);
                 Thread.currentThread().interrupt();
