@@ -18,6 +18,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
+            .cors(cors -> cors.configure(http)) // CORS 활성화 (WebConfig의 설정 사용)
             .csrf(csrf -> csrf.disable()) // csrf 비활성화
             .formLogin(login -> login.disable()) // security 로그인 비활성화(커스텀 로그인 API 사용 예정)
             .httpBasic(basic -> basic.disable()) // http basic 비활성화
