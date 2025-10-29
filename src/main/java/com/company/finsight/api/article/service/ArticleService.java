@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import reactor.core.scheduler.Schedulers;
 
@@ -74,7 +75,7 @@ public class ArticleService {
         );
     }
 
-    //@Scheduled(fixedRate = 900000)
+    @Scheduled(fixedRate = 900000)
     public void test() {
         log.info("스케줄링 시작...");
         String category = "산업/기업"; // 현재 크롤링 중인 카테고리명
