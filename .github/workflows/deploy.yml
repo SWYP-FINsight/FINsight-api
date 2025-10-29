@@ -102,22 +102,22 @@ jobs:
             
             # 기존 컨테이너 중지 및 삭제
             # || true: 실패해도 계속 진행 (처음 배포 시 컨테이너 없을 수 있음)
-            docker-compose -f docker-compose.prod.yml down || true
-            
+            docker compose -f docker-compose.prod.yml down || true
+
             # Docker Hub에서 새 이미지 다운로드
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/finsight:latest
-            
+
             # 사용하지 않는 Docker 이미지 정리 (디스크 공간 확보)
             docker image prune -f
-            
+
             # 새 컨테이너 시작 (백그라운드)
-            docker-compose -f docker-compose.prod.yml up -d
-            
+            docker compose -f docker-compose.prod.yml up -d
+
             # 배포 후 로그 확인 (최근 50줄)
-            docker-compose -f docker-compose.prod.yml logs --tail=50
-            
+            docker compose -f docker-compose.prod.yml logs --tail=50
+
             # 컨테이너 상태 확인 (실행 중인지 확인)
-            docker-compose -f docker-compose.prod.yml ps
+            docker compose -f docker-compose.prod.yml ps
 
       # ==================================
       # 8단계: 배포 결과 알림
