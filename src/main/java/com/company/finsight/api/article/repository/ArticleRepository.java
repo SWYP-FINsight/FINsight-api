@@ -4,4 +4,5 @@ import com.company.finsight.api.article.domain.Article;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ArticleRepository extends JpaRepository<Article,Long> {
+    Boolean existsByArticleCid(String articleCid);
 }
