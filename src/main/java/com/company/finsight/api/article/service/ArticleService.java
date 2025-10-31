@@ -3,6 +3,7 @@ package com.company.finsight.api.article.service;
 import com.company.finsight.api.article.client.CrawlerClient;
 import com.company.finsight.api.article.domain.Article;
 import com.company.finsight.api.article.dto.ArticleDetailDto;
+import com.company.finsight.api.article.dto.ArticleFilterDto;
 import com.company.finsight.api.article.dto.ArticleSummaryDto;
 import com.company.finsight.api.article.dto.ArticlesDto;
 import com.company.finsight.global.exception.business.article.ArticleErrorCode;
@@ -53,6 +54,18 @@ public class ArticleService {
         ));
     }
 
+    public Page<ArticlesDto> findList(Pageable pageable, ArticleFilterDto requestDto) {
+        Page<Article> articlePage = articleRepository.findByFilter(pageable, requestDto);
+
+        return articlePage.map(article -> new ArticlesDto(
+                article.getId(),
+                article.getTitle(),
+                article.getSummary(),
+                article.getSource(),
+                article.getPublishedAt()
+        ));
+    }
+
     /**
      * 기사 상세 조회 (본문 포함)
      *
@@ -78,7 +91,7 @@ public class ArticleService {
         );
     }
 
-    @Scheduled(fixedRate = 900000)
+    //@Scheduled(fixedRate = 900000)
     public void test() {
         log.info("스케줄링 시작...");
         String category = "산업/기업"; // 현재 크롤링 중인 카테고리명
