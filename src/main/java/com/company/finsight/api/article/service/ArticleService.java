@@ -3,6 +3,7 @@ package com.company.finsight.api.article.service;
 import com.company.finsight.api.article.client.CrawlerClient;
 import com.company.finsight.api.article.domain.Article;
 import com.company.finsight.api.article.dto.ArticleDetailDto;
+import com.company.finsight.api.article.dto.ArticleFilterDto;
 import com.company.finsight.api.article.dto.ArticleSummaryDto;
 import com.company.finsight.api.article.dto.ArticlesDto;
 import com.company.finsight.global.exception.business.article.ArticleErrorCode;
@@ -44,6 +45,18 @@ public class ArticleService {
         Page<Article> articlePage = articleRepository.findAll(pageable);
 
         // Article 엔티티를 ArticlesDto로 변환
+        return articlePage.map(article -> new ArticlesDto(
+                article.getId(),
+                article.getTitle(),
+                article.getSummary(),
+                article.getSource(),
+                article.getPublishedAt()
+        ));
+    }
+
+    public Page<ArticlesDto> findList(Pageable pageable, ArticleFilterDto requestDto) {
+        Page<Article> articlePage = articleRepository.findByFilter(pageable, requestDto);
+
         return articlePage.map(article -> new ArticlesDto(
                 article.getId(),
                 article.getTitle(),
