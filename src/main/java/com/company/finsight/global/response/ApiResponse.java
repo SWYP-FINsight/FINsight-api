@@ -46,15 +46,15 @@ public class ApiResponse<T> {
 	@Getter
 	public static class PageInfo<T> {
 		private final List<T> content;
-		private final int pageNumber;
-		private final int pageSize;
+		private final int page;
+		private final int size;
 		private final int totalPage;
 		private final long totalElements;
 
 		public PageInfo(Page<T> page) {
 			this.content = page.getContent();
-			this.pageNumber = page.getNumber();
-			this.pageSize = page.getSize();
+			this.page = page.getNumber();
+			this.size = page.getSize();
 			this.totalPage = page.getTotalPages();
 			this.totalElements = page.getTotalElements();
 		}
