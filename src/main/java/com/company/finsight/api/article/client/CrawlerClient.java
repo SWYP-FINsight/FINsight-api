@@ -1,7 +1,6 @@
 package com.company.finsight.api.article.client;
 
 import lombok.Getter;
-import java.util.Set;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
