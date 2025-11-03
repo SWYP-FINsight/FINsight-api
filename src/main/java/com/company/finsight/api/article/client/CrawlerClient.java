@@ -1,6 +1,7 @@
 package com.company.finsight.api.article.client;
 
 import lombok.Getter;
+import java.util.Set;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -20,14 +21,7 @@ public class CrawlerClient {
                 .build();
     }
 
-    public Mono<String> callIndustEnter() {
-        return webClient.get()
-                .uri("/industry/industrial-enterprise")
-                .retrieve()
-                .bodyToMono(String.class);
-    }
-
-    public Mono<String> callContent(String uri) {
+    public Mono<String> call(String uri) {
         return webClient.get()
                 .uri(uri)
                 .retrieve()
