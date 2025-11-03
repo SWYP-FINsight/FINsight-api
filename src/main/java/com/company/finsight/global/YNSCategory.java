@@ -1,5 +1,8 @@
 package com.company.finsight.global;
 
+import lombok.Getter;
+
+@Getter
 public enum YNSCategory {
     INDUSTRIAL_ENTERPRISE("산업/기업", "/industry/industrial-enterprise"),
     ELECTRONICS("전자", "/industry/electronics"),
@@ -23,6 +26,4 @@ public enum YNSCategory {
         this.path = path;
     }
 
-    public String getKoreanName() { return koreanName; }
-    public String getPath() { return path; }
 }
