@@ -39,7 +39,7 @@ public class Article {
     @Column(name = "source")
     private String source;
 
-    @Column(name = "keywords")
+    @Column(name = "keyword")
     private String keyword;
 
     @Column(name = "article_url", unique = true, nullable = false)

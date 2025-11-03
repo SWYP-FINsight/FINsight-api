@@ -3,6 +3,7 @@ package com.company.finsight.api.article.service;
 import com.company.finsight.api.article.client.CrawlerClient;
 import com.company.finsight.api.article.domain.Article;
 import com.company.finsight.api.article.dto.ArticleDetailDto;
+import com.company.finsight.api.article.dto.ArticleFilterDto;
 import com.company.finsight.api.article.dto.ArticleSummaryDto;
 import com.company.finsight.api.article.dto.ArticlesDto;
 import com.company.finsight.global.exception.business.article.ArticleErrorCode;
@@ -15,8 +16,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
@@ -41,6 +45,18 @@ public class ArticleService {
         Page<Article> articlePage = articleRepository.findAll(pageable);
 
         // Article 엔티티를 ArticlesDto로 변환
+        return articlePage.map(article -> new ArticlesDto(
+                article.getId(),
+                article.getTitle(),
+                article.getSummary(),
+                article.getSource(),
+                article.getPublishedAt()
+        ));
+    }
+
+    public Page<ArticlesDto> findList(Pageable pageable, ArticleFilterDto requestDto) {
+        Page<Article> articlePage = articleRepository.findByFilter(pageable, requestDto);
+
         return articlePage.map(article -> new ArticlesDto(
                 article.getId(),
                 article.getTitle(),
@@ -75,7 +91,7 @@ public class ArticleService {
         );
     }
 
-    //@Scheduled(fixedRate = 900000)
+    @Scheduled(fixedRate = 900000)
     public void test() {
         log.info("스케줄링 시작...");
         String category = "산업/기업"; // 현재 크롤링 중인 카테고리명
@@ -92,36 +108,37 @@ public class ArticleService {
     }
 
     private void callContent(List<ArticleSummaryDto> articleList) {
-        for(ArticleSummaryDto articleSummary : articleList) {
-            crawlerClient.callContent(articleSummary.getArticleUrl())
-                    .flatMap(articleParser::parseArticleContent)
-                    .publishOn(Schedulers.boundedElastic())
-                    .doOnNext(articleContent -> {
-                        log.info("본문 {} : 기자 {}", articleContent.getContent(), articleContent.getReporter());
-                        Article article = Article.create(
-                            articleSummary.getArticleCid(), articleSummary.getTitle(), articleSummary.getSummary(),
-                            articleContent.getContent(), articleSummary.getCategory(), articleContent.getReporter(),
-                            articleSummary.getSource(), findKeywords(articleContent.getContent()), articleSummary.getArticleUrl(),
-                            articleSummary.getThumbnailUrl(), articleSummary.getPublishedAt()
-                        );
-                        articleRepository.save(article);
-                    })
-                    .doOnError(error -> log.error("본문 크롤링 실패 : {}", articleSummary.getArticleCid(), error))
-                    .subscribe();
+        Random random = new Random();
+        int min = 5000;
+        int max = 15000;
 
-            // 크롤링 대기 시간 설정
-            try {
-                Random random = new Random();
-                int min = 5000;
-                int max = 15000;
-                int randomNumber = random.nextInt(max - min + 1) + min;
-                log.info("본문 조회 성공");
-                Thread.sleep(randomNumber);
-            } catch (InterruptedException e) {
-                log.error(e.getMessage(), e);
-                Thread.currentThread().interrupt();
-            }
-        }
+        Flux.fromIterable(articleList)
+                .concatMap(articleSummary ->
+                        crawlerClient.callContent(articleSummary.getArticleUrl())
+                                .flatMap(articleParser::parseArticleContent)
+                                .publishOn(Schedulers.boundedElastic())
+                                .doOnNext(articleContent -> {
+                                    log.info("본문 {} : 기자 {}", articleContent.getContent(), articleContent.getReporter());
+                                    if (!validRedundancy(articleSummary.getArticleCid())) {
+                                        Article article = Article.create(
+                                                articleSummary.getArticleCid(), articleSummary.getTitle(), articleSummary.getSummary(),
+                                                articleContent.getContent(), articleSummary.getCategory(), articleContent.getReporter(),
+                                                articleSummary.getSource(), findKeywords(articleContent.getContent()), articleSummary.getArticleUrl(),
+                                                articleSummary.getThumbnailUrl(), articleSummary.getPublishedAt()
+                                        );
+                                        articleRepository.save(article);
+                                        log.info("본문 저장 성공: {}", article.getArticleCid());
+                                    } else {
+                                        log.info("이미 수집한 데이터");
+                                    }
+                                })
+                                .doOnError(error -> log.error("본문 크롤링 실패 (개별) : {}", articleSummary.getArticleCid(), error))
+                                .onErrorResume(error -> Mono.empty())
+                                .then(Mono.delay(Duration.ofMillis(random.nextInt(max - min + 1) + min)))
+                )
+                .doOnComplete(() -> log.info("모든 기사 본문 크롤링 작업 완료."))
+                .doOnError(error -> log.error("전체 크롤링 스트림 실패", error))
+                .subscribe();
     }
 
     private String findKeywords(String content) {
@@ -134,4 +151,7 @@ public class ArticleService {
         return String.join(", ", keywords);
     }
 
+    private boolean validRedundancy(String articleCid) {
+        return articleRepository.existsByArticleCid(articleCid);
+    }
 }

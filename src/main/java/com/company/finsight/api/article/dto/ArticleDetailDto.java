@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 public class ArticleDetailDto {
     private Long id;
     private String title;
-    private String subject;
+    private String category;
     private String distributor;
     private LocalDateTime timestamp;
     private String content;
