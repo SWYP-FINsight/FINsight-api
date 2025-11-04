@@ -20,14 +20,7 @@ public class CrawlerClient {
                 .build();
     }
 
-    public Mono<String> callIndustEnter() {
-        return webClient.get()
-                .uri("/industry/industrial-enterprise")
-                .retrieve()
-                .bodyToMono(String.class);
-    }
-
-    public Mono<String> callContent(String uri) {
+    public Mono<String> call(String uri) {
         return webClient.get()
                 .uri(uri)
                 .retrieve()

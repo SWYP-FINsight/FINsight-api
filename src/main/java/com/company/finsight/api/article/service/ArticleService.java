@@ -6,6 +6,7 @@ import com.company.finsight.api.article.dto.ArticleDetailDto;
 import com.company.finsight.api.article.dto.ArticleFilterDto;
 import com.company.finsight.api.article.dto.ArticleSummaryDto;
 import com.company.finsight.api.article.dto.ArticlesDto;
+import com.company.finsight.global.YNSCategory;
 import com.company.finsight.global.exception.business.article.ArticleErrorCode;
 import com.company.finsight.global.exception.business.article.ArticleException;
 import com.company.finsight.api.article.repository.ArticleRepository;
@@ -21,10 +22,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.time.Duration;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -91,30 +89,46 @@ public class ArticleService {
         );
     }
 
-    @Scheduled(fixedRate = 900000)
-    public void test() {
+    @Scheduled(fixedDelay = 900000)
+    public void scheduledCrawlYNS() {
         log.info("스케줄링 시작...");
-        String category = "산업/기업"; // 현재 크롤링 중인 카테고리명
 
-        crawlerClient.callIndustEnter() // HTML 가져오기 (Mono<String>)
-                .flatMap(html -> articleParser.parseArticleList(html, category, crawlerClient.getYnsBaseUrl())) // HTML 파싱하여 DTO 리스트 생성 (Mono<List<ArticleDto>>)
-                .doOnNext(articleList -> {
-                    log.info("파싱 결과 개수 : {}, 카테고리 : {}", articleList.size(), category);
-                    callContent(articleList);
+        int MAX_CONCURRENCY = 5;
+        long startTime = System.currentTimeMillis();
+
+        Flux.fromArray(YNSCategory.values())
+                .flatMap(category ->
+                                fetchCategoryArticleList(category)
+                                        .flatMap(this::fetchArticleContents)
+                                        .doOnError(error -> log.error("크롤링 실패 카테고리 : {}", category.getKoreanName(), error))
+                                        .onErrorResume(e -> Mono.empty())
+                        , MAX_CONCURRENCY)
+                .doOnComplete(() -> {
+                    long duration = System.currentTimeMillis() - startTime;
+                    log.info("모든 카테고리 크롤링 완료. (총 {}ms 소요)", duration);
                 })
-                .doOnError(error -> log.error("크롤링 실패 카테고리 : {}", category, error))
-                .subscribe(); // 실행
-        log.info("스케줄링 종료...");
+                .doOnError(error -> log.error("전체 스케줄링 스트림 에러 발생", error))
+                .blockLast();
+
+        log.info("스케줄링 종료.");
     }
 
-    private void callContent(List<ArticleSummaryDto> articleList) {
+    private Mono<List<ArticleSummaryDto>> fetchCategoryArticleList(YNSCategory category) {
+        return crawlerClient.call(category.getPath())
+                .flatMap(html -> articleParser.parseArticleList(html, category.getKoreanName(), crawlerClient.getYnsBaseUrl()))
+                .doOnNext(articleList ->
+                        log.info("파싱 결과 개수 : {}, 카테고리 : {}", articleList.size(), category.getKoreanName())
+                );
+    }
+
+    private Mono<Void> fetchArticleContents(List<ArticleSummaryDto> articleList) {
         Random random = new Random();
         int min = 5000;
         int max = 15000;
 
-        Flux.fromIterable(articleList)
-                .concatMap(articleSummary ->
-                        crawlerClient.callContent(articleSummary.getArticleUrl())
+        return Flux.fromIterable(articleList)
+                .concatMap(articleSummary -> //
+                        crawlerClient.call(articleSummary.getArticleUrl())
                                 .flatMap(articleParser::parseArticleContent)
                                 .publishOn(Schedulers.boundedElastic())
                                 .doOnNext(articleContent -> {
@@ -136,9 +150,9 @@ public class ArticleService {
                                 .onErrorResume(error -> Mono.empty())
                                 .then(Mono.delay(Duration.ofMillis(random.nextInt(max - min + 1) + min)))
                 )
-                .doOnComplete(() -> log.info("모든 기사 본문 크롤링 작업 완료."))
-                .doOnError(error -> log.error("전체 크롤링 스트림 실패", error))
-                .subscribe();
+                .doOnComplete(() -> log.info("카테고리 내 '{}'개의 기사 본문 크롤링 작업 완료.", articleList.size()))
+                .doOnError(error -> log.error("개별 카테고리 본문 크롤링 스트림 실패", error))
+                .then();
     }
 
     private String findKeywords(String content) {
