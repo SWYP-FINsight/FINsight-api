@@ -5,7 +5,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public interface ArticleDslRepository {
     Page<Article> findByFilter(Pageable pageable, String category, String keyword, LocalDate period, String source);
+    List<String> findContentsByIdIn(List<Long> ids);
 }

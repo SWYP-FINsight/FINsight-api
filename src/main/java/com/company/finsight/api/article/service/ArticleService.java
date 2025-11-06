@@ -76,15 +76,25 @@ public class ArticleService {
         return new ArticleDetailDto(
                 article.getId(),
                 article.getTitle(),
-                article.getSummary(),          
-                article.getSource(),           
-                article.getPublishedAt(),      
+                article.getSummary(),
+                article.getSource(),
+                article.getPublishedAt(),
                 article.getContent(),
                 article.getReporter(),
-                article.getArticleUrl(),       
+                article.getArticleUrl(),
                 null,                          // TODO importance (향후 구현 예정)
-                article.getKeyword()           
+                article.getKeyword()
         );
+    }
+
+    /**
+     * 기사 ID 리스트로 본문(content) 리스트 조회
+     *
+     * @param ids 기사 ID 리스트
+     * @return 기사 본문 리스트
+     */
+    public List<String> findContentsByIds(List<Long> ids) {
+        return articleRepository.findContentsByIdIn(ids);
     }
 
     @Scheduled(fixedDelay = 900000)
