@@ -12,6 +12,12 @@ spring:
     properties:
       database-platform: org.hibernate.dialect.PostgreSQLDialect
 
+clova:
+  api:
+    url: ${CLOVA_API_URL}
+    key: ${CLOVA_API_KEY}
+    request-id: ${CLOVA_REQUEST_ID}
+
 logging:
   level:
     org.hibernate.SQL: debug

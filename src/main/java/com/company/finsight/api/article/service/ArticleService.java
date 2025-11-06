@@ -3,7 +3,6 @@ package com.company.finsight.api.article.service;
 import com.company.finsight.api.article.client.CrawlerClient;
 import com.company.finsight.api.article.domain.Article;
 import com.company.finsight.api.article.dto.ArticleDetailDto;
-import com.company.finsight.api.article.dto.ArticleFilterDto;
 import com.company.finsight.api.article.dto.ArticleSummaryDto;
 import com.company.finsight.api.article.dto.ArticlesDto;
 import com.company.finsight.global.YNSCategory;
@@ -22,6 +21,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.*;
 
 @Slf4j
@@ -34,27 +34,25 @@ public class ArticleService {
     private final ArticleRepository articleRepository;
 
     /**
-     * 기사 목록 조회 (페이지네이션)
+     * 기사 목록 조회 (필터링 옵션 포함)
      *
      * @param pageable 페이지 정보 (페이지 번호, 크기, 정렬)
+     * @param category 카테고리 필터 (선택)
+     * @param keyword 키워드 필터 (선택)
+     * @param period 기간 필터 (선택)
+     * @param source 출처 필터 (선택)
      * @return 페이지네이션된 기사 목록
      */
-    public Page<ArticlesDto> findList(Pageable pageable) {
-        Page<Article> articlePage = articleRepository.findAll(pageable);
+    public Page<ArticlesDto> findList(Pageable pageable, String category, String keyword, LocalDate period, String source) {
+        Page<Article> articlePage;
+
+        if (category != null || keyword != null || period != null || source != null) {
+            articlePage = articleRepository.findByFilter(pageable, category, keyword, period, source);
+        } else {
+            articlePage = articleRepository.findAll(pageable);
+        }
 
         // Article 엔티티를 ArticlesDto로 변환
-        return articlePage.map(article -> new ArticlesDto(
-                article.getId(),
-                article.getTitle(),
-                article.getSummary(),
-                article.getSource(),
-                article.getPublishedAt()
-        ));
-    }
-
-    public Page<ArticlesDto> findList(Pageable pageable, ArticleFilterDto requestDto) {
-        Page<Article> articlePage = articleRepository.findByFilter(pageable, requestDto);
-
         return articlePage.map(article -> new ArticlesDto(
                 article.getId(),
                 article.getTitle(),
