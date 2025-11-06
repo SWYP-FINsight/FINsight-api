@@ -1,7 +1,6 @@
 package com.company.finsight.api.article.repository;
 
 import com.company.finsight.api.article.domain.Article;
-import com.company.finsight.api.article.dto.ArticleFilterDto;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -27,19 +26,22 @@ public class ArticleDslRepositoryImpl implements ArticleDslRepository {
      * 필터 조건에 따라 기사를 조회
      *
      * @param pageable 페이징 정보
-     * @param filterDto 필터 조건 (category, keyword, source, period)
+     * @param category 카테고리 필터
+     * @param keyword 키워드 필터
+     * @param period 기간 필터
+     * @param source 출처 필터
      * @return 필터링된 기사 목록 (페이징)
      */
     @Override
-    public Page<Article> findByFilter(Pageable pageable, ArticleFilterDto filterDto) {
+    public Page<Article> findByFilter(Pageable pageable, String category, String keyword, LocalDate period, String source) {
         // 쿼리 실행
         List<Article> content = queryFactory
                 .selectFrom(article)
                 .where(
-                        categoryEq(filterDto.getCategory()),
-                        keywordEq(filterDto.getKeyword()),
-                        sourceEq(filterDto.getSource()),
-                        publishedAtAfter(filterDto.getPeriod())
+                        categoryEq(category),
+                        keywordEq(keyword),
+                        sourceEq(source),
+                        publishedAtAfter(period)
                 )
                 .orderBy(article.publishedAt.desc())
                 .offset(pageable.getOffset())
@@ -51,10 +53,10 @@ public class ArticleDslRepositoryImpl implements ArticleDslRepository {
                 .select(article.count())
                 .from(article)
                 .where(
-                        categoryEq(filterDto.getCategory()),
-                        keywordEq(filterDto.getKeyword()),
-                        sourceEq(filterDto.getSource()),
-                        publishedAtAfter(filterDto.getPeriod())
+                        categoryEq(category),
+                        keywordEq(keyword),
+                        sourceEq(source),
+                        publishedAtAfter(period)
                 )
                 .fetchOne();
 
