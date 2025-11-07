@@ -5,7 +5,7 @@ import com.company.finsight.api.article.domain.Article;
 import com.company.finsight.api.article.dto.ArticleDetailDto;
 import com.company.finsight.api.article.dto.ArticleSummaryDto;
 import com.company.finsight.api.article.dto.ArticlesDto;
-import com.company.finsight.global.YNSCategory;
+import com.company.finsight.global.ArticleCategory;
 import com.company.finsight.global.exception.business.article.ArticleErrorCode;
 import com.company.finsight.global.exception.business.article.ArticleException;
 import com.company.finsight.api.article.repository.ArticleRepository;
@@ -30,7 +30,7 @@ import java.util.*;
 public class ArticleService {
 
     private final CrawlerClient crawlerClient;
-    private final ArticleParser articleParser;
+    private final ArticleParserFactory articleParserFactory;
     private final ArticleRepository articleRepository;
 
     /**
@@ -76,15 +76,25 @@ public class ArticleService {
         return new ArticleDetailDto(
                 article.getId(),
                 article.getTitle(),
-                article.getSummary(),          
-                article.getSource(),           
-                article.getPublishedAt(),      
+                article.getSummary(),
+                article.getSource(),
+                article.getPublishedAt(),
                 article.getContent(),
                 article.getReporter(),
-                article.getArticleUrl(),       
+                article.getArticleUrl(),
                 null,                          // TODO importance (향후 구현 예정)
-                article.getKeyword()           
+                article.getKeyword()
         );
+    }
+
+    /**
+     * 기사 ID 리스트로 본문(content) 리스트 조회
+     *
+     * @param ids 기사 ID 리스트
+     * @return 기사 본문 리스트
+     */
+    public List<String> findContentsByIds(List<Long> ids) {
+        return articleRepository.findContentsByIdIn(ids);
     }
 
     @Scheduled(fixedDelay = 900000)
@@ -94,10 +104,10 @@ public class ArticleService {
         int MAX_CONCURRENCY = 5;
         long startTime = System.currentTimeMillis();
 
-        Flux.fromArray(YNSCategory.values())
+        Flux.fromArray(ArticleCategory.values())
                 .flatMap(category ->
                                 fetchCategoryArticleList(category)
-                                        .flatMap(this::fetchArticleContents)
+                                        .flatMap(articleList -> fetchArticleContents(articleList, category))
                                         .doOnError(error -> log.error("크롤링 실패 카테고리 : {}", category.getKoreanName(), error))
                                         .onErrorResume(e -> Mono.empty())
                         , MAX_CONCURRENCY)
@@ -111,23 +121,23 @@ public class ArticleService {
         log.info("스케줄링 종료.");
     }
 
-    private Mono<List<ArticleSummaryDto>> fetchCategoryArticleList(YNSCategory category) {
+    private Mono<List<ArticleSummaryDto>> fetchCategoryArticleList(ArticleCategory category) {
         return crawlerClient.call(category.getPath())
-                .flatMap(html -> articleParser.parseArticleList(html, category.getKoreanName(), crawlerClient.getYnsBaseUrl()))
+                .flatMap(html -> articleParserFactory.getParser(category.getArticleType()).parseArticleList(html, category.getKoreanName(), crawlerClient.getYnsBaseUrl()))
                 .doOnNext(articleList ->
                         log.info("파싱 결과 개수 : {}, 카테고리 : {}", articleList.size(), category.getKoreanName())
                 );
     }
 
-    private Mono<Void> fetchArticleContents(List<ArticleSummaryDto> articleList) {
+    private Mono<Void> fetchArticleContents(List<ArticleSummaryDto> articleList, ArticleCategory category) {
         Random random = new Random();
         int min = 5000;
         int max = 15000;
 
         return Flux.fromIterable(articleList)
-                .concatMap(articleSummary -> //
+                .concatMap(articleSummary ->
                         crawlerClient.call(articleSummary.getArticleUrl())
-                                .flatMap(articleParser::parseArticleContent)
+                                .flatMap(html -> articleParserFactory.getParser(category.getArticleType()).parseArticleContent(html))
                                 .publishOn(Schedulers.boundedElastic())
                                 .doOnNext(articleContent -> {
                                     log.info("본문 {} : 기자 {}", articleContent.getContent(), articleContent.getReporter());
