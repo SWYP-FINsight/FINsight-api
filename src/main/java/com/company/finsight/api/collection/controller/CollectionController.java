@@ -3,6 +3,8 @@ package com.company.finsight.api.collection.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,6 +35,21 @@ public class CollectionController {
             HttpStatus.CREATED,
             "컬렉션 등록이 완료되었습니다.",
             collectionService.create(userDetails.getUserId(), request)
+        );
+    }
+
+    /**
+     * 마이 컬렉션 상세 조회
+     * 추후 추가될 기능
+     */
+    @GetMapping("/{collectionId}")
+    public ResponseEntity<ApiResponse<CollectionResponse>> getCollection(
+        @PathVariable Long collectionId
+    ) {
+        return ApiResponse.success(
+            HttpStatus.OK,
+            "컬렉션 조회에 성공하였습니다.",
+            collectionService.getCollection(collectionId)
         );
     }
 }

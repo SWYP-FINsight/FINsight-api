@@ -9,6 +9,8 @@ import com.company.finsight.api.collection.entity.Collection;
 import com.company.finsight.api.collection.repository.CollectionRepository;
 import com.company.finsight.api.user.entity.User;
 import com.company.finsight.api.user.service.UserService;
+import com.company.finsight.global.exception.business.collection.CollectionErrorCode;
+import com.company.finsight.global.exception.business.collection.CollectionException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -34,5 +36,13 @@ public class CollectionService {
         Collection savedCollection = collectionRepository.save(collection);
 
         return CollectionResponse.from(savedCollection);
+    }
+
+    @Transactional(readOnly = true)
+    public CollectionResponse getCollection(Long collectionId) {
+        Collection collection = collectionRepository.findById(collectionId)
+            .orElseThrow(() -> new CollectionException(CollectionErrorCode.COLLECTION_NOT_FOUND));
+
+        return CollectionResponse.from(collection);
     }
 }
