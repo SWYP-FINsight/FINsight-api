@@ -35,12 +35,12 @@ public class ArticleController {
      */
     @GetMapping
     public ResponseEntity<ApiResponse<ApiResponse.PageInfo<ArticlesDto>>> findList(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String category,
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) LocalDate period,
-            @RequestParam(required = false) String source
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "20") int size,
+        @RequestParam(required = false) String category,
+        @RequestParam(required = false) String keyword,
+        @RequestParam(required = false) LocalDate period,
+        @RequestParam(required = false) String source
     ) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "publishedAt"));
         Page<ArticlesDto> articlePage = articleService.findList(pageable, category, keyword, period, source);

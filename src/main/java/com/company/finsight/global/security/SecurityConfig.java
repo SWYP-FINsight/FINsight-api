@@ -12,9 +12,14 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+import lombok.RequiredArgsConstructor;
+
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
+
+    private final CustomLogoutSuccessHandler logoutSuccessHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -31,8 +36,23 @@ public class SecurityConfig {
                 .maxSessionsPreventsLogin(false) // 새 로그인 시 기존 세션 만료: 컴퓨터에서 로그인하면 모바일에서 로그아웃됨
             )
 
+            .securityContext(context -> context
+                .requireExplicitSave(false)) // 기본값: 세션 자동 저장
+            // requireExplicitSave(false) = Filter가 자동으로 세션에 저장
+            // requireExplicitSave(true) = 수동으로 저장해야 함
+
+            .logout(logout -> logout
+                .logoutUrl("/auth/logout") // 로그아웃 url 접근
+                .logoutSuccessHandler(logoutSuccessHandler) // 로그아웃 커스텀 핸들러
+                .invalidateHttpSession(true) // 세션 무효화
+                .clearAuthentication(true) // SecurityContext 클리어
+                .deleteCookies("JSESSIONID") // 쿠키 삭제
+                .permitAll()
+            )
+
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/articles/**").permitAll()
+                .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .anyRequest().authenticated()
             )
