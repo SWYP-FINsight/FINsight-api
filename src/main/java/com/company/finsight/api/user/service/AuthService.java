@@ -1,9 +1,14 @@
 package com.company.finsight.api.user.service;
 
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.company.finsight.api.user.dto.LoginRequest;
 import com.company.finsight.api.user.dto.SignupRequest;
 import com.company.finsight.api.user.dto.SignupResponse;
 import com.company.finsight.api.user.entity.User;
@@ -15,10 +20,11 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class UserService {
+public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
 
     /**
      * 회원가입 로직
@@ -42,5 +48,18 @@ public class UserService {
         User savedUser = userRepository.save(user);
 
         return SignupResponse.from(savedUser);
+    }
+
+    public void login(LoginRequest loginRequest) {
+        // 1. 인증 처리
+        Authentication authentication = authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(
+                loginRequest.getUsername(),
+                loginRequest.getPassword()
+            )
+        );
+
+        // 2. SecurityContext에 저장
+        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }
