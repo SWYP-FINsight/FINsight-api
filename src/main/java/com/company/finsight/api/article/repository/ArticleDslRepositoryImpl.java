@@ -94,4 +94,19 @@ public class ArticleDslRepositoryImpl implements ArticleDslRepository {
         LocalDateTime startOfDay = period.atStartOfDay();
         return article.publishedAt.goe(startOfDay);
     }
+
+    /**
+     * ID 리스트로 content만 조회 (프로젝션 쿼리)
+     *
+     * @param ids 기사 ID 리스트
+     * @return 기사 본문 리스트
+     */
+    @Override
+    public List<String> findContentsByIdIn(List<Long> ids) {
+        return queryFactory
+                .select(article.content)
+                .from(article)
+                .where(article.id.in(ids))
+                .fetch();
+    }
 }

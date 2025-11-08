@@ -108,6 +108,9 @@ jobs:
             POSTGRES_PROD_DBNAME=${{ secrets.POSTGRES_PROD_DBNAME }}
             POSTGRES_PROD_USERNAME=${{ secrets.POSTGRES_PROD_USERNAME }}
             POSTGRES_PROD_PASSWORD=${{ secrets.POSTGRES_PROD_PASSWORD }}
+            CLOVA_API_URL=${{ secrets.CLOVA_API_URL }}
+            CLOVA_API_KEY=${{ secrets.CLOVA_API_KEY }}
+            CLOVA_REQUEST_ID=${{ secrets.CLOVA_REQUEST_ID }}
             EOF
             
             # Docker Compose에서 사용할 환경변수 설정
