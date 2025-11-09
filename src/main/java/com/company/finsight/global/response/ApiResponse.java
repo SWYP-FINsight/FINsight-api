@@ -39,6 +39,10 @@ public class ApiResponse<T> {
 		return ResponseEntity.status(code).body(new ApiResponse<>(message, new PageInfo<>(page)));
 	}
 
+	public static <T> ResponseEntity<ApiResponse<CursorPageInfo<T>>> success(HttpStatus code, String message, CursorPageInfo<T> cursorPageInfo) {
+		return ResponseEntity.status(code).body(new ApiResponse<>(message, cursorPageInfo));
+	}
+
 	public static <T> ResponseEntity<ApiResponse<T>> error(HttpStatus code, String message) {
 		return ResponseEntity.status(code).body(new ApiResponse<>(message, null));
 	}
@@ -57,6 +61,21 @@ public class ApiResponse<T> {
 			this.size = page.getSize();
 			this.totalPage = page.getTotalPages();
 			this.totalElements = page.getTotalElements();
+		}
+	}
+
+	@Getter
+	public static class CursorPageInfo<T> {
+		private final List<T> content;
+		private final Long nextCursor;
+		private final boolean hasNext;
+		private final int size;
+
+		public CursorPageInfo(List<T> content, Long nextCursor, boolean hasNext) {
+			this.content = content;
+			this.nextCursor = nextCursor;
+			this.hasNext = hasNext;
+			this.size = content.size();
 		}
 	}
 }
