@@ -42,8 +42,10 @@ public class AIClient {
 			.bodyToFlux(String.class);
 
 		stream.toStream().forEach(chunk -> {
-			if (chunk.contains("\"event\":\"result\"")) return;
+			if (chunk.contains("\"event\":\"result\"") || chunk.contains("\"finishReason\":\"stop\"")) return;
+
 			String content = AiResponseParser.extractMessageContent(chunk);
+
 			if (!content.isEmpty()) resultBuilder.append(content);
 		});
 
