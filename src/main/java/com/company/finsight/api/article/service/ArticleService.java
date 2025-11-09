@@ -10,10 +10,10 @@ import com.company.finsight.global.exception.business.article.ArticleErrorCode;
 import com.company.finsight.global.exception.business.article.ArticleException;
 import com.company.finsight.api.article.repository.ArticleRepository;
 import com.company.finsight.global.Const;
+import com.company.finsight.global.response.ApiResponse;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -36,30 +36,46 @@ public class ArticleService {
     /**
      * 기사 목록 조회 (필터링 옵션 포함)
      *
-     * @param pageable 페이지 정보 (페이지 번호, 크기, 정렬)
+     * @param cursor 커서 (마지막 조회 기사 ID, null이면 처음부터)
+     * @param size 조회할 기사 개수
      * @param category 카테고리 필터 (선택)
-     * @param keyword 키워드 필터 (선택)
+     * @param search 검색어 필터 (선택)
      * @param period 기간 필터 (선택)
      * @param source 출처 필터 (선택)
-     * @return 페이지네이션된 기사 목록
+     * @return 커서 페이징된 기사 목록
      */
-    public Page<ArticlesDto> findList(Pageable pageable, String category, String keyword, LocalDate period, String source) {
-        Page<Article> articlePage;
+    public ApiResponse.CursorPageInfo<ArticlesDto> findList(Long cursor, int size, String category, String search, LocalDate period, String source) {
+        // size + 1 조회 (hasNext 판단용)
+        List<Article> articleList = articleRepository.findByFilter(
+            cursor,
+            size,
+            category,
+            search,
+            period,
+            source
+        );
 
-        if (category != null || keyword != null || period != null || source != null) {
-            articlePage = articleRepository.findByFilter(pageable, category, keyword, period, source);
-        } else {
-            articlePage = articleRepository.findAll(pageable);
-        }
+        // hasNext 판단 및 실제 반환 데이터 분리
+        boolean hasNext = articleList.size() > size;
+        List<Article> content = hasNext ? articleList.subList(0, size) : articleList;
 
         // Article 엔티티를 ArticlesDto로 변환
-        return articlePage.map(article -> new ArticlesDto(
+        List<ArticlesDto> articlesDtos = content.stream()
+            .map(article -> new ArticlesDto(
                 article.getId(),
                 article.getTitle(),
                 article.getSummary(),
                 article.getSource(),
                 article.getPublishedAt()
-        ));
+            ))
+            .toList();
+
+        // nextCursor 계산 (마지막 아이템의 ID)
+        Long nextCursor = hasNext && !content.isEmpty()
+            ? content.get(content.size() - 1).getId()
+            : null;
+
+        return new ApiResponse.CursorPageInfo<>(articlesDtos, nextCursor, hasNext);
     }
 
     /**

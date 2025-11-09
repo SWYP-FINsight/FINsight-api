@@ -4,9 +4,7 @@ import com.company.finsight.api.article.domain.Article;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
+
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -25,42 +23,31 @@ public class ArticleDslRepositoryImpl implements ArticleDslRepository {
     /**
      * 필터 조건에 따라 기사를 조회
      *
-     * @param pageable 페이징 정보
      * @param category 카테고리 필터
-     * @param keyword 키워드 필터
+     * @param search 검색어 필터
      * @param period 기간 필터
      * @param source 출처 필터
      * @return 필터링된 기사 목록 (페이징)
      */
     @Override
-    public Page<Article> findByFilter(Pageable pageable, String category, String keyword, LocalDate period, String source) {
+    public List<Article> findByFilter(Long cursor, int size, String category, String search, LocalDate period, String source) {
         // 쿼리 실행
-        List<Article> content = queryFactory
+        return queryFactory
                 .selectFrom(article)
                 .where(
-                        categoryEq(category),
-                        keywordEq(keyword),
-                        sourceEq(source),
-                        publishedAtAfter(period)
+                    cursorCond(cursor),
+                    categoryEq(category),
+                    contentContains(search),
+                    sourceEq(source),
+                    publishedAtAfter(period)
                 )
-                .orderBy(article.publishedAt.desc())
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
+                .orderBy(article.id.desc())
+                .limit(size + 1)
                 .fetch();
+    }
 
-        // 전체 개수 조회
-        Long total = queryFactory
-                .select(article.count())
-                .from(article)
-                .where(
-                        categoryEq(category),
-                        keywordEq(keyword),
-                        sourceEq(source),
-                        publishedAtAfter(period)
-                )
-                .fetchOne();
-
-        return new PageImpl<>(content, pageable, total != null ? total : 0L);
+    private BooleanExpression cursorCond(Long cursor) {
+        return cursor != null ? article.id.lt(cursor) : null;
     }
 
     /**
@@ -71,10 +58,10 @@ public class ArticleDslRepositoryImpl implements ArticleDslRepository {
     }
 
     /**
-     * 키워드 동적 조건
+     * 키워드 동적 조건 (포함 검색)
      */
-    private BooleanExpression keywordEq(String keyword) {
-        return keyword != null ? article.keyword.eq(keyword) : null;
+    private BooleanExpression contentContains(String search) {
+        return search != null ? article.content.containsIgnoreCase(search) : null;
     }
 
     /**
