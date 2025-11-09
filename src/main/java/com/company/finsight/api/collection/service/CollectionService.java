@@ -1,9 +1,13 @@
 package com.company.finsight.api.collection.service;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.company.finsight.api.collection.dto.CollectionCreateRequest;
+import com.company.finsight.api.collection.dto.CollectionInfo;
+import com.company.finsight.api.collection.dto.CollectionListResponse;
 import com.company.finsight.api.collection.dto.CollectionResponse;
 import com.company.finsight.api.collection.entity.Collection;
 import com.company.finsight.api.collection.repository.CollectionRepository;
@@ -44,5 +48,11 @@ public class CollectionService {
             .orElseThrow(() -> new CollectionException(CollectionErrorCode.COLLECTION_NOT_FOUND));
 
         return CollectionResponse.from(collection);
+    }
+
+    @Transactional(readOnly = true)
+    public CollectionListResponse getMyCollections(Long userId) {
+        List<CollectionInfo> collectionInfoList = collectionRepository.findAllByUserId(userId);
+        return CollectionListResponse.from(collectionInfoList);
     }
 }

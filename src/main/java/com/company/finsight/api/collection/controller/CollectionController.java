@@ -1,5 +1,7 @@
 package com.company.finsight.api.collection.controller;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.company.finsight.api.collection.dto.CollectionCreateRequest;
+import com.company.finsight.api.collection.dto.CollectionListResponse;
 import com.company.finsight.api.collection.dto.CollectionResponse;
 import com.company.finsight.api.collection.service.CollectionService;
 import com.company.finsight.global.response.ApiResponse;
@@ -50,6 +53,17 @@ public class CollectionController {
             HttpStatus.OK,
             "컬렉션 조회에 성공하였습니다.",
             collectionService.getCollection(collectionId)
+        );
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<CollectionListResponse>> getMyCollections(
+        @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        return ApiResponse.success(
+            HttpStatus.OK,
+            "마이 컬렉션 조회가 완료되었습니다.",
+            collectionService.getMyCollections(userDetails.getUserId())
         );
     }
 }
