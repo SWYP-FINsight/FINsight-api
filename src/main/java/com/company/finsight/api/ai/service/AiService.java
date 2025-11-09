@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.company.finsight.api.ai.client.AIClient;
+import com.company.finsight.api.ai.dto.SummarizeRequestDto;
+import com.company.finsight.api.ai.dto.SummarizeResponseDto;
 import com.company.finsight.api.article.service.ArticleService;
 
 import lombok.AllArgsConstructor;
@@ -18,10 +20,10 @@ public class AiService {
 	private final AIClient aiClient;
 
 	@Transactional(readOnly = true)
-	public String summarize(List<Long> articleIds){
-		return aiClient.summarize(
-			articleService.findContentsByIds(articleIds)
-		);
-	}
+	public SummarizeResponseDto summarize(SummarizeRequestDto requestDto) {
+		List<String> contents = articleService.findContentsByIds(requestDto.getArticleIds());
+		String summary = aiClient.summarize(contents);
 
+		return SummarizeResponseDto.toEntity(summary);
+	}
 }
