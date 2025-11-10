@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ArticleDslRepository {
-    Page<Article> findByFilter(Pageable pageable, String category, String keyword, LocalDate period, String source);
+    Page<Article> findByFilter(Pageable pageable, String keyword, LocalDate period, String source);
     List<String> findContentsByIdIn(List<Long> ids);
     
     /**

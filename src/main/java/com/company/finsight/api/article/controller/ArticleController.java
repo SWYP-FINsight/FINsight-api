@@ -27,7 +27,6 @@ public class ArticleController {
      *
      * @param page 페이지 번호 (0부터 시작, 기본값: 0)
      * @param size 페이지 크기 (기본값: 20)
-     * @param category 카테고리 필터 (선택)
      * @param keyword 키워드 필터 (선택)
      * @param period 기간 필터 (선택, yyyy-MM-dd 형식)
      * @param source 출처 필터 (선택)
@@ -37,13 +36,12 @@ public class ArticleController {
     public ResponseEntity<ApiResponse<ApiResponse.PageInfo<ArticlesDto>>> findList(
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "20") int size,
-        @RequestParam(required = false) String category,
         @RequestParam(required = false) String keyword,
         @RequestParam(required = false) LocalDate period,
         @RequestParam(required = false) String source
     ) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "publishedAt"));
-        Page<ArticlesDto> articlePage = articleService.findList(pageable, category, keyword, period, source);
+        Page<ArticlesDto> articlePage = articleService.findList(pageable, keyword, period, source);
         return ApiResponse.success(HttpStatus.OK, "기사 목록 조회 성공", articlePage);
     }
 

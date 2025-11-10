@@ -39,17 +39,16 @@ public class ArticleService {
      * 기사 목록 조회 (필터링 옵션 포함)
      *
      * @param pageable 페이지 정보 (페이지 번호, 크기, 정렬)
-     * @param category 카테고리 필터 (선택)
      * @param keyword 키워드 필터 (선택)
      * @param period 기간 필터 (선택)
      * @param source 출처 필터 (선택)
      * @return 페이지네이션된 기사 목록
      */
-    public Page<ArticlesDto> findList(Pageable pageable, String category, String keyword, LocalDate period, String source) {
+    public Page<ArticlesDto> findList(Pageable pageable, String keyword, LocalDate period, String source) {
         Page<Article> articlePage;
 
-        if (category != null || keyword != null || period != null || source != null) {
-            articlePage = articleRepository.findByFilter(pageable, category, keyword, period, source);
+        if (keyword != null || period != null || source != null) {
+            articlePage = articleRepository.findByFilter(pageable, keyword, period, source);
         } else {
             articlePage = articleRepository.findAll(pageable);
         }
