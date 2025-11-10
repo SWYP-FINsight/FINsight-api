@@ -79,6 +79,14 @@ public class CollectionService {
             collectionCond.getKeyword(), period, collectionCond.getSource());
     }
 
+    @Transactional
+    public void deleteMyCollection(Long collectionId) {
+        Collection collection = collectionRepository.findById(collectionId)
+            .orElseThrow(() -> new CollectionException(CollectionErrorCode.COLLECTION_NOT_FOUND));
+
+        collectionRepository.delete(collection);
+    }
+
     private CollectionCond getCollectionCond(Long collectionId) {
         Collection collection = collectionRepository.findById(collectionId)
             .orElseThrow(() -> new CollectionException(CollectionErrorCode.COLLECTION_NOT_FOUND));

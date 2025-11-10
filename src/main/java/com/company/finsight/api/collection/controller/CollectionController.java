@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -79,6 +80,17 @@ public class CollectionController {
             HttpStatus.OK,
             "컬렉션을 통한 기사 조회가 완료되었습니다.",
             collectionService.getArticlesByCollection(collectionId, cursor, size)
+        );
+    }
+
+    @DeleteMapping("/{collectionId}")
+    public ResponseEntity<ApiResponse<Void>> deleteMyCollection(
+        @PathVariable Long collectionId
+    ) {
+        collectionService.deleteMyCollection(collectionId);
+        return ApiResponse.success(
+            HttpStatus.OK,
+            "마이 컬렉션 삭제가 완료되었습니다."
         );
     }
 }
