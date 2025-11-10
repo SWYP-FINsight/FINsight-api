@@ -23,6 +23,7 @@ import reactor.core.scheduler.Schedulers;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Slf4j
@@ -98,7 +99,7 @@ public class ArticleService {
         return articleRepository.findContentsByIdIn(ids);
     }
 
-    @Scheduled(fixedDelay = 900000)
+    @Scheduled(fixedDelay = 900000) // 15분마다
     public void scheduledCrawlYNS() {
         log.info("스케줄링 시작...");
 
@@ -120,6 +121,37 @@ public class ArticleService {
                 .blockLast();
 
         log.info("스케줄링 종료.");
+    }
+
+    /**
+     * 30일 이상 지난 기사 삭제 (매일 새벽 2시 실행)
+     */
+    @Scheduled(cron = "0 0 2 * * *")
+    public void deleteOldArticles() {
+        log.info("오래된 기사 삭제 작업 시작...");
+        
+        try {
+            LocalDateTime cutoffDate = LocalDateTime.now().minusDays(Const.ARTICLE_RETENTION_DAYS);
+            
+            // 삭제 전 개수 확인
+            long oldArticleCount = articleRepository.countByPublishedAtBefore(cutoffDate);
+            
+            if (oldArticleCount == 0) {
+                log.info("삭제할 오래된 기사가 없습니다.");
+                return;
+            }
+            
+            log.info("{}일 이상 지난 기사 {}개 발견 (기준일: {})", 
+                    Const.ARTICLE_RETENTION_DAYS, oldArticleCount, cutoffDate);
+            
+            // 삭제 실행
+            int deletedCount = articleRepository.deleteByPublishedAtBefore(cutoffDate);
+            
+            log.info("오래된 기사 삭제 완료: {}개 삭제됨", deletedCount);
+            
+        } catch (Exception e) {
+            log.error("오래된 기사 삭제 중 오류 발생", e);
+        }
     }
 
     private Mono<List<ArticleSummaryDto>> fetchCategoryArticleList(ArticleCategory category) {
