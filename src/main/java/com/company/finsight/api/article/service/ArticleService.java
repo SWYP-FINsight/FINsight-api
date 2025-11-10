@@ -58,7 +58,6 @@ public class ArticleService {
         return articlePage.map(article -> new ArticlesDto(
                 article.getId(),
                 article.getTitle(),
-                article.getSummary(),
                 article.getSource(),
                 article.getPublishedAt()
         ));
@@ -78,14 +77,12 @@ public class ArticleService {
         return new ArticleDetailDto(
                 article.getId(),
                 article.getTitle(),
-                article.getSummary(),
                 article.getSource(),
                 article.getPublishedAt(),
                 article.getContent(),
                 article.getReporter(),
                 article.getArticleUrl(),
-                null,                          // TODO importance (향후 구현 예정)
-                article.getKeyword()
+                null                          // TODO importance (향후 구현 예정)
         );
     }
 
