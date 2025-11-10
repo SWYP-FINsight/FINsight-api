@@ -1,5 +1,6 @@
-package com.company.finsight.api.article.service;
+package com.company.finsight.api.article.crawler.parser;
 
+import com.company.finsight.api.article.crawler.constant.ArticleType;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

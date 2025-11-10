@@ -1,5 +1,6 @@
-package com.company.finsight.api.article.service;
+package com.company.finsight.api.article.crawler.parser;
 
+import com.company.finsight.api.article.crawler.constant.ArticleType;
 import com.company.finsight.api.article.dto.ArticleContentDto;
 import com.company.finsight.api.article.dto.ArticleSummaryDto;
 import reactor.core.publisher.Mono;
