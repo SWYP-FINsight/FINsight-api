@@ -1,6 +1,6 @@
 package com.company.finsight.api.collection.controller;
 
-import java.util.List;
+import java.time.LocalDateTime;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,8 +10,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.company.finsight.api.article.dto.ArticlesDto;
 import com.company.finsight.api.collection.dto.CollectionCreateRequest;
 import com.company.finsight.api.collection.dto.CollectionListResponse;
 import com.company.finsight.api.collection.dto.CollectionResponse;
@@ -52,7 +54,7 @@ public class CollectionController {
         return ApiResponse.success(
             HttpStatus.OK,
             "컬렉션 조회에 성공하였습니다.",
-            collectionService.getCollection(collectionId)
+            collectionService.getMyCollection(collectionId)
         );
     }
 
@@ -64,6 +66,19 @@ public class CollectionController {
             HttpStatus.OK,
             "마이 컬렉션 조회가 완료되었습니다.",
             collectionService.getMyCollections(userDetails.getUserId())
+        );
+    }
+
+    @GetMapping("/{collectionId}/articles")
+    public ResponseEntity<ApiResponse<ApiResponse.CursorPageInfo<ArticlesDto, LocalDateTime>>> getArticlesByCollection(
+        @PathVariable Long collectionId,
+        @RequestParam(required = false) LocalDateTime cursor,
+        @RequestParam(defaultValue = "10") int size
+    ) {
+        return ApiResponse.success(
+            HttpStatus.OK,
+            "컬렉션을 통한 기사 조회가 완료되었습니다.",
+            collectionService.getArticlesByCollection(collectionId, cursor, size)
         );
     }
 }
