@@ -125,7 +125,7 @@ public class ArticleService {
     private Mono<List<ArticleSummaryDto>> fetchCategoryArticleList(ArticleCategory category) {
         return crawlerClient.call(category.getArticleType().getBaseUrl(), category.getPath())
                 .flatMap(html -> articleParserFactory.getParser(category.getArticleType()).parseArticleList(html, category.getKoreanName(), category.getArticleType().getBaseUrl()))
-                .map(articleList -> filterIncrementalArticles(articleList))
+                .map(this::filterIncrementalArticles)
                 .doOnNext(articleList ->
                         log.info("필터링 후 처리할 기사 개수 : {}, 카테고리 : {}", articleList.size(), category.getKoreanName())
                 );
