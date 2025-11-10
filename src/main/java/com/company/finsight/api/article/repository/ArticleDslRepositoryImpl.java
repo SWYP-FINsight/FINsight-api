@@ -28,14 +28,13 @@ public class ArticleDslRepositoryImpl implements ArticleDslRepository {
      * 필터 조건에 따라 기사를 조회
      *
      * @param pageable 페이징 정보
-     * @param category 카테고리 필터
      * @param keyword 키워드 필터
      * @param period 기간 필터
      * @param source 출처 필터
      * @return 필터링된 기사 목록 (페이징)
      */
     @Override
-    public Page<Article> findByFilter(Pageable pageable, String category, String keyword, LocalDate period, String source) {
+    public Page<Article> findByFilter(Pageable pageable, String keyword, LocalDate period, String source) {
         // 보관 기간 제한
         LocalDateTime retentionCutoff = LocalDateTime.now().minusDays(Const.ARTICLE_RETENTION_DAYS);
         
@@ -43,7 +42,6 @@ public class ArticleDslRepositoryImpl implements ArticleDslRepository {
         List<Article> content = queryFactory
                 .selectFrom(article)
                 .where(
-                        categoryEq(category),
                         keywordEq(keyword),
                         sourceEq(source),
                         publishedAtAfter(period),
@@ -59,7 +57,6 @@ public class ArticleDslRepositoryImpl implements ArticleDslRepository {
                 .select(article.count())
                 .from(article)
                 .where(
-                        categoryEq(category),
                         keywordEq(keyword),
                         sourceEq(source),
                         publishedAtAfter(period),
@@ -68,13 +65,6 @@ public class ArticleDslRepositoryImpl implements ArticleDslRepository {
                 .fetchOne();
 
         return new PageImpl<>(content, pageable, total != null ? total : 0L);
-    }
-
-    /**
-     * 카테고리 동적 조건
-     */
-    private BooleanExpression categoryEq(String category) {
-        return category != null ? article.category.eq(category) : null;
     }
 
     /**
