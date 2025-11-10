@@ -1,6 +1,5 @@
-package com.company.finsight.global;
+package com.company.finsight.api.article.crawler.constant;
 
-import com.company.finsight.api.article.service.ArticleType;
 import lombok.Getter;
 
 @Getter
@@ -17,7 +16,9 @@ public enum ArticleCategory {
     VENTURE_BUSINESS("벤처/중기", "/industry/venture-business", ArticleType.YNS),
     BIO_HEALTH("바이오/헬스", "/industry/bioindustry-health", ArticleType.YNS),
     AGRICULTURE("농업", "/industry/agriculture", ArticleType.YNS),
-    OCEAN_FISHERY("해양/수산", "/industry/ocean-fishery", ArticleType.YNS);
+    OCEAN_FISHERY("해양/수산", "/industry/ocean-fishery", ArticleType.YNS),
+
+    HK_LASTED_ARTICLE("최신순", "sitemap/latest-article.xml", ArticleType.HK);
 
     private final String koreanName;
     private final String path;
