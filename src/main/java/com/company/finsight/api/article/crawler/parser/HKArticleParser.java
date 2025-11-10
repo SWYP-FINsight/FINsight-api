@@ -154,7 +154,7 @@ public class HKArticleParser implements ArticleParser {
     
     /**
      * URL에서 기사 ID 추출
-     * 예: https://www.hankyung.com/article/202511103488i -> 202511103488i
+     * 예: /article/202511103488i -> 202511103488i
      */
     private String extractArticleId(String url) {
         String[] parts = url.split("/");

@@ -1,6 +1,5 @@
 package com.company.finsight.api.article.crawler.client;
 
-import lombok.Getter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;

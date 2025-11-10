@@ -125,7 +125,7 @@ public class ArticleService {
     private Mono<List<ArticleSummaryDto>> fetchCategoryArticleList(ArticleCategory category) {
         return crawlerClient.call(category.getArticleType().getBaseUrl(), category.getPath())
                 .flatMap(html -> articleParserFactory.getParser(category.getArticleType()).parseArticleList(html, category.getKoreanName(), category.getArticleType().getBaseUrl()))
-                .map(articleList -> filterIncrementalArticles(articleList, category))
+                .map(articleList -> filterIncrementalArticles(articleList))
                 .doOnNext(articleList ->
                         log.info("필터링 후 처리할 기사 개수 : {}, 카테고리 : {}", articleList.size(), category.getKoreanName())
                 );
@@ -134,7 +134,7 @@ public class ArticleService {
     /**
      * 최근 기사만 필터링
      */
-    private List<ArticleSummaryDto> filterIncrementalArticles(List<ArticleSummaryDto> articleList, ArticleCategory category) {
+    private List<ArticleSummaryDto> filterIncrementalArticles(List<ArticleSummaryDto> articleList) {
         if (articleList.isEmpty()) {
             return articleList;
         }

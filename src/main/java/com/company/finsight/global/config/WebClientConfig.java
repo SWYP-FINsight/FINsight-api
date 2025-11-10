@@ -9,7 +9,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
-import org.springframework.http.codec.ClientCodecConfigurer;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -28,10 +27,8 @@ public class WebClientConfig {
         HttpClient httpClient = HttpClient.create()
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
                 .responseTimeout(Duration.ofSeconds(10))
-                .doOnConnected(conn -> {
-                    conn.addHandlerLast(new ReadTimeoutHandler(5, TimeUnit.SECONDS))
-                        .addHandlerLast(new WriteTimeoutHandler(5, TimeUnit.SECONDS));
-                });
+                .doOnConnected(conn -> conn.addHandlerLast(new ReadTimeoutHandler(5, TimeUnit.SECONDS))
+                    .addHandlerLast(new WriteTimeoutHandler(5, TimeUnit.SECONDS)));
 
         // 버퍼 사이즈 설정 (10MB로 증가)
         ExchangeStrategies exchangeStrategies = ExchangeStrategies.builder()

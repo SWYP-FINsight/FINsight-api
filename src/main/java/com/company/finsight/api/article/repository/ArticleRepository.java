@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ArticleRepository extends JpaRepository<Article,Long>, ArticleDslRepository {
-    Boolean existsByArticleCid(String articleCid);
     
     /**
      * 특정 출처(source)의 가장 최근 기사 조회
@@ -24,9 +23,4 @@ public interface ArticleRepository extends JpaRepository<Article,Long>, ArticleD
     @Query("SELECT a.articleCid FROM Article a WHERE a.articleCid IN :cids")
     List<String> findExistingCids(@Param("cids") List<String> cids);
     
-    /**
-     * 특정 날짜 이후의 기사 개수 조회
-     */
-    @Query("SELECT COUNT(a) FROM Article a WHERE a.source = :source AND a.publishedAt > :afterDate")
-    long countBySourceAndPublishedAtAfter(@Param("source") String source, @Param("afterDate") LocalDateTime afterDate);
 }
