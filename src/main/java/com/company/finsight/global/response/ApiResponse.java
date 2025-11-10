@@ -39,7 +39,7 @@ public class ApiResponse<T> {
 		return ResponseEntity.status(code).body(new ApiResponse<>(message, new PageInfo<>(page)));
 	}
 
-	public static <T> ResponseEntity<ApiResponse<CursorPageInfo<T>>> success(HttpStatus code, String message, CursorPageInfo<T> cursorPageInfo) {
+	public static <T, S> ResponseEntity<ApiResponse<CursorPageInfo<T, S>>> success(HttpStatus code, String message, CursorPageInfo<T, S> cursorPageInfo) {
 		return ResponseEntity.status(code).body(new ApiResponse<>(message, cursorPageInfo));
 	}
 
@@ -65,13 +65,13 @@ public class ApiResponse<T> {
 	}
 
 	@Getter
-	public static class CursorPageInfo<T> {
+	public static class CursorPageInfo<T, S> {
 		private final List<T> content;
-		private final Long nextCursor;
+		private final S nextCursor;
 		private final boolean hasNext;
 		private final int size;
 
-		public CursorPageInfo(List<T> content, Long nextCursor, boolean hasNext) {
+		public CursorPageInfo(List<T> content, S nextCursor, boolean hasNext) {
 			this.content = content;
 			this.nextCursor = nextCursor;
 			this.hasNext = hasNext;

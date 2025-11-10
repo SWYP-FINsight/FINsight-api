@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @RequestMapping("/articles")
 @RestController
@@ -21,19 +22,17 @@ public class ArticleController {
     /**
      * 기사 목록 조회 (필터링 옵션 포함)
      *
-     * @param cursor 커서 (마지막 조회 기사 ID, null이면 처음부터)
+     * @param cursor 커서 (마지막 조회 기사 publishedAt, null이면 처음부터)
      * @param size 조회할 기사 개수 (기본값: 10)
-     * @param category 카테고리 필터 (선택)
      * @param search 검색어 필터 (선택, 포함 검색)
      * @param period 기간 필터 (선택, yyyy-MM-dd 형식)
      * @param source 출처 필터 (선택)
      * @return 커서 페이징된 기사 목록
      */
     @GetMapping
-    public ResponseEntity<ApiResponse<ApiResponse.CursorPageInfo<ArticlesDto>>> findList(
-        @RequestParam(required = false) Long cursor,
+    public ResponseEntity<ApiResponse<ApiResponse.CursorPageInfo<ArticlesDto, LocalDateTime>>> findList(
+        @RequestParam(required = false) LocalDateTime cursor,
         @RequestParam(defaultValue = "10") int size,
-        @RequestParam(required = false) String category,
         @RequestParam(required = false) String search,
         @RequestParam(required = false) LocalDate period,
         @RequestParam(required = false) String source
@@ -41,7 +40,7 @@ public class ArticleController {
         return ApiResponse.success(
             HttpStatus.OK,
             "기사 목록 조회 성공",
-            articleService.findList(cursor, size, category, search, period, source)
+            articleService.findList(cursor, size, search, period, source)
         );
     }
 

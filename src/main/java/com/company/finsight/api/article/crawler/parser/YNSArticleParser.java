@@ -1,5 +1,6 @@
-package com.company.finsight.api.article.service;
+package com.company.finsight.api.article.crawler.parser;
 
+import com.company.finsight.api.article.crawler.constant.ArticleType;
 import com.company.finsight.api.article.dto.ArticleContentDto;
 import com.company.finsight.api.article.dto.ArticleSummaryDto;
 import lombok.extern.slf4j.Slf4j;
@@ -87,8 +88,8 @@ public class YNSArticleParser implements ArticleParser {
                 int emailDomainIndex = content.indexOf(emailDomain); // "@yna.co.kr" 시작 위치 찾기
 
                 if (emailDomainIndex != -1) {
-                    int endIndex = emailDomainIndex + emailDomain.length();
-                    content = content.substring(0, endIndex).trim();
+                    // 이메일 도메인 앞까지만 잘라내기
+                    content = content.substring(0, emailDomainIndex).trim();
                 } else {
                     // 이메일 주소가 없는 경우
                     int jeboIndex = content.indexOf("제보");

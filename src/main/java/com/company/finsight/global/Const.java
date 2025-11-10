@@ -6,6 +6,12 @@ import java.util.Set;
 
 public class Const {
 
+    /**
+     * 기사 보관 기간 (일)
+     * 이 기간이 지난 기사는 자동으로 삭제됨
+     */
+    public static final int ARTICLE_RETENTION_DAYS = 30;
+
     public static final Set<String> KEYWORDS = new HashSet<>(Arrays.asList(
             "실적", "공시", "증시", "금리", "주가", "상승", "하락",
             "매수", "매도", "외국인", "기관", "개인",
