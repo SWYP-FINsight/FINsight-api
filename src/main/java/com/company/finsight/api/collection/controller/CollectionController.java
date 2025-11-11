@@ -22,9 +22,14 @@ import com.company.finsight.api.collection.service.CollectionService;
 import com.company.finsight.global.response.ApiResponse;
 import com.company.finsight.global.security.CustomUserDetails;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "컬렉션", description = "사용자가 생성한 기사 컬렉션 관련 API")
 @RestController
 @RequestMapping("/collections")
 @RequiredArgsConstructor
@@ -32,9 +37,15 @@ public class CollectionController {
 
     private final CollectionService collectionService;
 
+    @Operation(summary = "새 컬렉션 생성", description = "새로운 기사 컬렉션을 생성합니다. (로그인 필요)")
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "컬렉션 생성 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증되지 않은 사용자")
+    })
     @PostMapping
     public ResponseEntity<ApiResponse<CollectionResponse>> create(
-        @AuthenticationPrincipal CustomUserDetails userDetails,
+        @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails,
         @Valid @RequestBody CollectionCreateRequest request
     ) {
         return ApiResponse.success(
@@ -44,12 +55,14 @@ public class CollectionController {
         );
     }
 
-    /**
-     * 마이 컬렉션 상세 조회
-     * 추후 추가될 기능
-     */
+    @Operation(summary = "내 컬렉션 상세 조회", description = "특정 컬렉션의 상세 정보를 조회합니다.")
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "컬렉션 조회 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "존재하지 않는 컬렉션")
+    })
     @GetMapping("/{collectionId}")
     public ResponseEntity<ApiResponse<CollectionResponse>> getCollection(
+        @Parameter(description = "조회할 컬렉션의 ID", required = true, example = "1")
         @PathVariable Long collectionId
     ) {
         return ApiResponse.success(
@@ -59,9 +72,14 @@ public class CollectionController {
         );
     }
 
+    @Operation(summary = "내 모든 컬렉션 목록 조회", description = "로그인한 사용자의 모든 컬렉션 목록을 조회합니다. (로그인 필요)")
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "컬렉션 목록 조회 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증되지 않은 사용자")
+    })
     @GetMapping
     public ResponseEntity<ApiResponse<CollectionListResponse>> getMyCollections(
-        @AuthenticationPrincipal CustomUserDetails userDetails
+        @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         return ApiResponse.success(
             HttpStatus.OK,
@@ -70,10 +88,20 @@ public class CollectionController {
         );
     }
 
+    @Operation(summary = "컬렉션에 속한 기사 목록 조회", description = "특정 컬렉션에 포함된 기사 목록을 커서 기반 페이징으로 조회합니다.")
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "기사 목록 조회 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "존재하지 않는 컬렉션")
+    })
     @GetMapping("/{collectionId}/articles")
     public ResponseEntity<ApiResponse<ApiResponse.CursorPageInfo<ArticlesDto, LocalDateTime>>> getArticlesByCollection(
+        @Parameter(description = "조회할 컬렉션의 ID", required = true, example = "1")
         @PathVariable Long collectionId,
+
+        @Parameter(description = "다음 페이지를 위한 커서 (마지막으로 조회된 기사의 publishedAt 값)", example = "2024-07-29T10:00:00")
         @RequestParam(required = false) LocalDateTime cursor,
+
+        @Parameter(description = "한 페이지에 보여줄 기사 수", example = "10")
         @RequestParam(defaultValue = "10") int size
     ) {
         return ApiResponse.success(
@@ -83,8 +111,15 @@ public class CollectionController {
         );
     }
 
+    @Operation(summary = "내 컬렉션 삭제", description = "특정 컬렉션을 삭제합니다. (로그인 필요)")
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "컬렉션 삭제 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증되지 않은 사용자"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "존재하지 않는 컬렉션")
+    })
     @DeleteMapping("/{collectionId}")
     public ResponseEntity<ApiResponse<Void>> deleteMyCollection(
+        @Parameter(description = "삭제할 컬렉션의 ID", required = true, example = "1")
         @PathVariable Long collectionId
     ) {
         collectionService.deleteMyCollection(collectionId);
