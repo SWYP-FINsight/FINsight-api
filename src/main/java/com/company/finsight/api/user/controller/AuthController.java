@@ -2,11 +2,14 @@ package com.company.finsight.api.user.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.company.finsight.api.user.dto.CheckUsernameResponse;
 import com.company.finsight.api.user.dto.LoginRequest;
 import com.company.finsight.api.user.dto.SignupRequest;
 import com.company.finsight.api.user.dto.SignupResponse;
@@ -40,6 +43,21 @@ public class AuthController {
         return ApiResponse.success(
             HttpStatus.OK,
             "로그인이 완료되었습니다."
+        );
+    }
+
+    @GetMapping("/check-username")
+    public ResponseEntity<ApiResponse<CheckUsernameResponse>> checkUsername(
+        @RequestParam String username
+    ) {
+        CheckUsernameResponse checkUsernameResponse = authService.checkUsername(username);
+
+        String message = checkUsernameResponse.isAvailable() ? "사용 가능한 아이디입니다." : "이미 사용중인 아이디입니다.";
+
+        return ApiResponse.success(
+            HttpStatus.OK,
+            message,
+            checkUsernameResponse
         );
     }
 }
