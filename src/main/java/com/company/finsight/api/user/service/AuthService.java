@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.company.finsight.api.user.dto.CheckLoginStatusResponse;
 import com.company.finsight.api.user.dto.CheckUsernameResponse;
 import com.company.finsight.api.user.dto.LoginRequest;
 import com.company.finsight.api.user.dto.SignupRequest;
@@ -66,5 +67,15 @@ public class AuthService {
 
     public CheckUsernameResponse checkUsername(String username) {
         return CheckUsernameResponse.from(!userRepository.existsByUsername(username));
+    }
+
+    public CheckLoginStatusResponse checkLoginStatus() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null) {
+            return CheckLoginStatusResponse.of(false, null);
+        }
+
+        return CheckLoginStatusResponse.of(true, authentication.getName());
     }
 }

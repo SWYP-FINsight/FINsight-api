@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.company.finsight.api.user.dto.CheckLoginStatusResponse;
 import com.company.finsight.api.user.dto.CheckUsernameResponse;
 import com.company.finsight.api.user.dto.LoginRequest;
 import com.company.finsight.api.user.dto.SignupRequest;
@@ -58,6 +59,19 @@ public class AuthController {
             HttpStatus.OK,
             message,
             checkUsernameResponse
+        );
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<CheckLoginStatusResponse>> checkLoginStatus() {
+        CheckLoginStatusResponse checkLoginStatusResponse = authService.checkLoginStatus();
+
+        String message = checkLoginStatusResponse.isLoggedIn() ? "로그인 상태입니다." : "로그인 상태가 아닙니다.";
+
+        return ApiResponse.success(
+            HttpStatus.OK,
+            message,
+            checkLoginStatusResponse
         );
     }
 }
