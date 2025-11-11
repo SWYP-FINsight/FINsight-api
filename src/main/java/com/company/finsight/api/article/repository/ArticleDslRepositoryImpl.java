@@ -1,6 +1,7 @@
 package com.company.finsight.api.article.repository;
 
 import com.company.finsight.api.article.domain.Article;
+import com.company.finsight.global.Const;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,10 @@ public class ArticleDslRepositoryImpl implements ArticleDslRepository {
      */
     @Override
     public List<Article> findByFilter(LocalDateTime cursor, int size, String search, LocalDate period, String source) {
+
+        // 보관 기간 제한
+        LocalDateTime retentionCutoff = LocalDateTime.now().minusDays(Const.ARTICLE_RETENTION_DAYS);
+
         // 쿼리 실행
         return queryFactory
             .selectFrom(article)
@@ -37,7 +42,8 @@ public class ArticleDslRepositoryImpl implements ArticleDslRepository {
                 cursorCond(cursor),
                 contentContains(search),
                 sourceEq(source),
-                publishedAtAfter(period)
+                publishedAtAfter(period),
+                article.publishedAt.goe(retentionCutoff) // 보관 기간 제한
             )
             .orderBy(article.publishedAt.desc())
             .limit(size + 1)
