@@ -5,9 +5,6 @@ import com.company.finsight.global.Const;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -27,51 +24,41 @@ public class ArticleDslRepositoryImpl implements ArticleDslRepository {
     /**
      * 필터 조건에 따라 기사를 조회
      *
-     * @param pageable 페이징 정보
-     * @param keyword 키워드 필터
+     * @param search 검색어 필터
      * @param period 기간 필터
      * @param source 출처 필터
      * @return 필터링된 기사 목록 (페이징)
      */
     @Override
-    public Page<Article> findByFilter(Pageable pageable, String keyword, LocalDate period, String source) {
+    public List<Article> findByFilter(LocalDateTime cursor, int size, String search, LocalDate period, String source) {
+
         // 보관 기간 제한
         LocalDateTime retentionCutoff = LocalDateTime.now().minusDays(Const.ARTICLE_RETENTION_DAYS);
-        
+
         // 쿼리 실행
-        List<Article> content = queryFactory
-                .selectFrom(article)
-                .where(
-                        keywordEq(keyword),
-                        sourceEq(source),
-                        publishedAtAfter(period),
-                        article.publishedAt.goe(retentionCutoff) // 보관 기간 제한
-                )
-                .orderBy(article.publishedAt.desc())
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
-                .fetch();
+        return queryFactory
+            .selectFrom(article)
+            .where(
+                cursorCond(cursor),
+                contentContains(search),
+                sourceEq(source),
+                publishedAtAfter(period),
+                article.publishedAt.goe(retentionCutoff) // 보관 기간 제한
+            )
+            .orderBy(article.publishedAt.desc())
+            .limit(size + 1)
+            .fetch();
+    }
 
-        // 전체 개수 조회
-        Long total = queryFactory
-                .select(article.count())
-                .from(article)
-                .where(
-                        keywordEq(keyword),
-                        sourceEq(source),
-                        publishedAtAfter(period),
-                        article.publishedAt.goe(retentionCutoff) // 보관 기간 제한
-                )
-                .fetchOne();
-
-        return new PageImpl<>(content, pageable, total != null ? total : 0L);
+    private BooleanExpression cursorCond(LocalDateTime cursor) {
+        return cursor != null ? article.publishedAt.lt(cursor) : null;
     }
 
     /**
-     * 키워드 동적 조건
+     * 키워드 동적 조건 (포함 검색)
      */
-    private BooleanExpression keywordEq(String keyword) {
-        return keyword != null ? article.keyword.eq(keyword) : null;
+    private BooleanExpression contentContains(String search) {
+        return search != null ? article.content.containsIgnoreCase(search) : null;
     }
 
     /**
@@ -101,10 +88,10 @@ public class ArticleDslRepositoryImpl implements ArticleDslRepository {
     @Override
     public List<String> findContentsByIdIn(List<Long> ids) {
         return queryFactory
-                .select(article.content)
-                .from(article)
-                .where(article.id.in(ids))
-                .fetch();
+            .select(article.content)
+            .from(article)
+            .where(article.id.in(ids))
+            .fetch();
     }
 
     /**
@@ -113,12 +100,12 @@ public class ArticleDslRepositoryImpl implements ArticleDslRepository {
     @Override
     public Optional<Article> findLatestBySource(String source) {
         Article result = queryFactory
-                .selectFrom(article)
-                .where(article.source.eq(source))
-                .orderBy(article.publishedAt.desc())
-                .limit(1)
-                .fetchOne();
-        
+            .selectFrom(article)
+            .where(article.source.eq(source))
+            .orderBy(article.publishedAt.desc())
+            .limit(1)
+            .fetchOne();
+
         return Optional.ofNullable(result);
     }
 
@@ -130,12 +117,12 @@ public class ArticleDslRepositoryImpl implements ArticleDslRepository {
         if (cids == null || cids.isEmpty()) {
             return List.of();
         }
-        
+
         return queryFactory
-                .select(article.articleCid)
-                .from(article)
-                .where(article.articleCid.in(cids))
-                .fetch();
+            .select(article.articleCid)
+            .from(article)
+            .where(article.articleCid.in(cids))
+            .fetch();
     }
 
     /**
@@ -144,11 +131,11 @@ public class ArticleDslRepositoryImpl implements ArticleDslRepository {
     @Override
     public long countByPublishedAtBefore(LocalDateTime beforeDate) {
         Long count = queryFactory
-                .select(article.count())
-                .from(article)
-                .where(article.publishedAt.lt(beforeDate))
-                .fetchOne();
-        
+            .select(article.count())
+            .from(article)
+            .where(article.publishedAt.lt(beforeDate))
+            .fetchOne();
+
         return count != null ? count : 0L;
     }
 
@@ -158,10 +145,10 @@ public class ArticleDslRepositoryImpl implements ArticleDslRepository {
     @Override
     public int deleteByPublishedAtBefore(LocalDateTime beforeDate) {
         long deletedCount = queryFactory
-                .delete(article)
-                .where(article.publishedAt.lt(beforeDate))
-                .execute();
-        
+            .delete(article)
+            .where(article.publishedAt.lt(beforeDate))
+            .execute();
+
         return (int) deletedCount;
     }
 }
