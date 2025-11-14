@@ -72,7 +72,7 @@ public class AuthService {
     public CheckLoginStatusResponse checkLoginStatus() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication == null) {
+        if (authentication == null || authentication instanceof org.springframework.security.authentication.AnonymousAuthenticationToken) {
             return CheckLoginStatusResponse.of(false, null);
         }
 
