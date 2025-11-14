@@ -3,6 +3,7 @@ package com.company.finsight.global.security;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -24,7 +25,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-            .cors(cors -> cors.configure(http)) // CORS 활성화 (WebConfig의 설정 사용)
+            .cors(Customizer.withDefaults()) // CORS 활성화 (WebConfig의 설정 사용)
             .csrf(AbstractHttpConfigurer::disable) // csrf 비활성화
             .formLogin(AbstractHttpConfigurer::disable) // security 로그인 비활성화(커스텀 로그인 API 사용 예정)
             .httpBasic(AbstractHttpConfigurer::disable) // http basic 비활성화
