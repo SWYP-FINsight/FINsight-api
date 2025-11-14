@@ -65,6 +65,7 @@ public class ArticleService {
                 article.getId(),
                 article.getTitle(),
                 article.getSource(),
+                article.getContent().substring(0, 150) + "...",
                 article.getPublishedAt()
             ))
             .toList();
