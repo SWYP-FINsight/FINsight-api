@@ -65,7 +65,9 @@ public class ArticleService {
                 article.getId(),
                 article.getTitle(),
                 article.getSource(),
-                article.getContent().substring(0, 150) + "...",
+                article.getContent() != null && article.getContent().length() > 150
+                    ? article.getContent().substring(0, 150) + "..."
+                    : article.getContent(),
                 article.getPublishedAt()
             ))
             .toList();
