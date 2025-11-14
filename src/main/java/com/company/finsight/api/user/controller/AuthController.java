@@ -53,7 +53,7 @@ public class AuthController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패")
     })
-    @PostMapping("/login")
+    @PostMapping("/user/login")
     public ResponseEntity<ApiResponse<Void>> login(
         @Valid @RequestBody LoginRequest loginRequest
     ) {
@@ -88,7 +88,7 @@ public class AuthController {
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "로그인 상태 확인 성공")
     })
-    @GetMapping("/me")
+    @GetMapping("/user/me")
     public ResponseEntity<ApiResponse<CheckLoginStatusResponse>> checkLoginStatus() {
         CheckLoginStatusResponse checkLoginStatusResponse = authService.checkLoginStatus();
 
