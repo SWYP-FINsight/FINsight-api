@@ -2,6 +2,7 @@ package com.company.finsight.api.article.service;
 
 import com.company.finsight.api.article.crawler.client.CrawlerClient;
 import com.company.finsight.api.article.crawler.constant.ArticleCategory;
+import com.company.finsight.api.article.crawler.constant.ArticleType;
 import com.company.finsight.api.article.crawler.parser.ArticleParserFactory;
 import com.company.finsight.api.article.domain.Article;
 import com.company.finsight.api.article.dto.ArticleDetailDto;
@@ -91,6 +92,13 @@ public class ArticleService {
         Article article = articleRepository.findById(id)
             .orElseThrow(() -> new ArticleException(ArticleErrorCode.ARTICLE_NOT_FOUND));
 
+        String articleUrl = "";
+        if (article.getSource().equals("연합뉴스")) {
+            articleUrl = ArticleType.YNS.getBaseUrl();
+        } else if (article.getSource().equals("한국경제")) {
+            articleUrl = ArticleType.HK.getBaseUrl();
+        }
+
         return new ArticleDetailDto(
             article.getId(),
             article.getTitle(),
@@ -98,7 +106,7 @@ public class ArticleService {
             article.getPublishedAt(),
             article.getContent(),
             article.getReporter(),
-            article.getArticleUrl(),
+            articleUrl + article.getArticleUrl(),
             null                          // TODO importance (향후 구현 예정)
         );
     }
