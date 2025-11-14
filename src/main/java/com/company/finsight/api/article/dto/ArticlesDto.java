@@ -19,6 +19,9 @@ public class ArticlesDto {
     @Schema(description = "기사 출처", example = "연합뉴스")
     private String source;
 
+    @Schema(description = "미리보기", example = "본문 미리보기")
+    private String content;
+
     @Schema(description = "기사 발행 시간", example = "2024-07-29T09:00:00")
     private LocalDateTime timestamp;
 }
