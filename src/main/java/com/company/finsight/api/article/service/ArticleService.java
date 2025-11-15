@@ -1,5 +1,19 @@
 package com.company.finsight.api.article.service;
 
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Random;
+import java.util.Set;
+
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import org.springframework.web.util.UriComponentsBuilder;
+
 import com.company.finsight.api.article.crawler.client.CrawlerClient;
 import com.company.finsight.api.article.crawler.constant.ArticleCategory;
 import com.company.finsight.api.article.crawler.constant.ArticleType;
@@ -8,24 +22,17 @@ import com.company.finsight.api.article.domain.Article;
 import com.company.finsight.api.article.dto.ArticleDetailDto;
 import com.company.finsight.api.article.dto.ArticleSummaryDto;
 import com.company.finsight.api.article.dto.ArticlesDto;
-import com.company.finsight.global.exception.business.article.ArticleErrorCode;
-import com.company.finsight.global.exception.business.article.ArticleException;
 import com.company.finsight.api.article.repository.ArticleRepository;
 import com.company.finsight.global.Const;
+import com.company.finsight.global.exception.business.article.ArticleErrorCode;
+import com.company.finsight.global.exception.business.article.ArticleException;
 import com.company.finsight.global.response.ApiResponse;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
-
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.*;
 
 @Slf4j
 @Service
@@ -92,12 +99,17 @@ public class ArticleService {
         Article article = articleRepository.findById(id)
             .orElseThrow(() -> new ArticleException(ArticleErrorCode.ARTICLE_NOT_FOUND));
 
-        String articleUrl = "";
+        String baseurl = "";
         if (article.getSource().equals("연합뉴스")) {
-            articleUrl = ArticleType.YNS.getBaseUrl();
+			baseurl = ArticleType.YNS.getBaseUrl();
         } else if (article.getSource().equals("한국경제")) {
-            articleUrl = ArticleType.HK.getBaseUrl();
+			baseurl = ArticleType.HK.getBaseUrl();
         }
+
+		String finalUrl = UriComponentsBuilder.fromUriString(baseurl)
+			.path(article.getArticleUrl())
+			.build()
+			.toString();
 
         return new ArticleDetailDto(
             article.getId(),
@@ -106,7 +118,7 @@ public class ArticleService {
             article.getPublishedAt(),
             article.getContent(),
             article.getReporter(),
-            articleUrl + article.getArticleUrl(),
+			finalUrl,
             null                          // TODO importance (향후 구현 예정)
         );
     }
