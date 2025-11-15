@@ -14,7 +14,8 @@ public class WebConfig implements WebMvcConfigurer {
 					"http://localhost:3000",
 					"https://localhost:3000",
 					"https://finsight.웹.한국",
-					"https://finsight.xn--yq5b.xn--3e0b707e/"
+					"https://finsight.xn--yq5b.xn--3e0b707e/",
+					"https://finsight-publish.vercel.app/"
 					)
 				.allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH")
 				.allowedHeaders("*")
