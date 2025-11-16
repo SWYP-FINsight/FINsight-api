@@ -7,12 +7,16 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
-	private final String webUrl = "http://localhost:3000";
-
 	@Override
 	public void addCorsMappings(CorsRegistry registry) {
 		registry.addMapping("/**")
-				.allowedOrigins(webUrl)
+				.allowedOrigins(
+					"http://localhost:3000",
+					"https://localhost:3000",
+					"https://finsight.웹.한국",
+					"https://finsight.xn--yq5b.xn--3e0b707e/",
+					"https://finsight-publish.vercel.app/"
+					)
 				.allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH")
 				.allowedHeaders("*")
 				.allowCredentials(true);

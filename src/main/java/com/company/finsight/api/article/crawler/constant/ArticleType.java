@@ -4,7 +4,7 @@ import lombok.Getter;
 
 @Getter
 public enum ArticleType {
-    YNS("https://www.yna.co.kr"), HK("https://www.hankyung.com/");
+    YNS("https://www.yna.co.kr"), HK("https://www.hankyung.com");
 
     private final String baseUrl;
 
