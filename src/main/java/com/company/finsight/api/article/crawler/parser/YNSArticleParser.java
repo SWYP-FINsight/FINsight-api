@@ -79,43 +79,63 @@ public class YNSArticleParser implements ArticleParser {
             Element articleBodyElement = doc.selectFirst("article#articleWrap div.story-news.article");
             String content = "";
             if (articleBodyElement != null) {
-                content = articleBodyElement.text();
+                // 불필요한 요소 제거 (광고, 이미지 등)
+                articleBodyElement.select("aside, figure, .ads-box, .label-box, script").remove();
 
-                // 광고 문구 제거
-                content = content.replaceFirst("^\\s*\\([^)]+\\)\\s*", "").trim();
+                // HTML을 유지하면서 내용 추출
+                content = articleBodyElement.html();
 
+                // 광고 문구 제거 (HTML 버전)
+                content = content.replaceFirst("^\\s*<p>\\s*\\([^)]+\\)\\s*", "<p>").trim();
+
+                // 이메일 주소 이후 내용 제거
                 String emailDomain = "@yna.co.kr";
-                int emailDomainIndex = content.indexOf(emailDomain); // "@yna.co.kr" 시작 위치 찾기
+                int emailDomainIndex = content.indexOf(emailDomain);
 
                 if (emailDomainIndex != -1) {
-                    // 이메일 도메인 앞까지만 잘라내기
-                    content = content.substring(0, emailDomainIndex).trim();
+                    // 이메일이 포함된 <p> 태그 찾기
+                    int pTagEnd = content.indexOf("</p>", emailDomainIndex);
+                    if (pTagEnd != -1) {
+                        content = content.substring(0, pTagEnd + 4).trim();
+                    } else {
+                        content = content.substring(0, emailDomainIndex).trim();
+                    }
                 } else {
-                    // 이메일 주소가 없는 경우
+                    // 제보 또는 저작권 문구 제거
                     int jeboIndex = content.indexOf("제보");
                     if (jeboIndex != -1) {
-                        content = content.substring(0, jeboIndex).trim();
+                        int pTagStart = content.lastIndexOf("<p", jeboIndex);
+                        if (pTagStart != -1) {
+                            content = content.substring(0, pTagStart).trim();
+                        }
                     }
-                    // 저작권 문구
-                    int copyrightIndex = content.indexOf("<저작권자(c) 연합뉴스");
+                    int copyrightIndex = content.indexOf("&lt;저작권자(c) 연합뉴스");
+                    if (copyrightIndex == -1) {
+                        copyrightIndex = content.indexOf("<저작권자(c) 연합뉴스");
+                    }
                     if (copyrightIndex != -1) {
-                        content = content.substring(0, copyrightIndex).trim();
+                        int pTagStart = content.lastIndexOf("<p", copyrightIndex);
+                        if (pTagStart != -1) {
+                            content = content.substring(0, pTagStart).trim();
+                        }
                     }
                 }
+
+                // 빈 <p> 태그 제거 및 정리
+                content = content.replaceAll("<p>\\s*</p>", "");
+                content = content.replaceAll("<p>\\s*<br\\s*/?>\\s*</p>", "");
 
             } else {
                 log.warn("Article body element not found.");
             }
 
-            // 작성자 이름 추출
+            // 작성자 이름 추출 (이 부분은 기존과 동일)
             Element reporterElement = doc.selectFirst("div.writer-zone01 strong.tit-name > a");
             String reporter = "";
             if (reporterElement != null) {
                 reporter = reporterElement.text();
             } else {
-                // 작성자 정보가 없는 기사
                 log.info("작성자 파악 불가");
-                // 또는 메타 태그에서 시도
                 Element metaAuthor = doc.selectFirst("meta[name=author]");
                 if (metaAuthor != null) {
                     reporter = metaAuthor.attr("content");
