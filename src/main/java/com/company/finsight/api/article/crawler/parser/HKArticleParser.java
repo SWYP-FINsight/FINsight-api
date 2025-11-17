@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -14,7 +16,6 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
@@ -36,7 +37,7 @@ public class HKArticleParser implements ArticleParser {
                     Element locElement = urlElement.selectFirst("loc");
                     Element newsElement = urlElement.selectFirst("news|news");
                     Element imageElement = urlElement.selectFirst("image|image");
-
+                    
                     if (locElement == null || newsElement == null) {
                         log.warn("필수 요소가 없습니다. loc 또는 news");
                         continue;
@@ -96,56 +97,71 @@ public class HKArticleParser implements ArticleParser {
         return Mono.fromCallable(() -> {
             Document doc = Jsoup.parse(htmlContent);
 
-            // 본문 추출 (포맷팅 유지)
+            // 본문 추출
             Element articleBodyElement = doc.selectFirst("div.article-body#articletxt");
             String content = "";
 
             if (articleBodyElement != null) {
-                // 불필요한 요소 제거
-                articleBodyElement.select("figure, script, style, .ad-area-wrap, .box-cont").remove();
 
-                // HTML 클론 생성
-                Element clonedContent = articleBodyElement.clone();
+                // --- DOM을 직접 수정하여 불필요한 부분 제거 ---
 
-                // 허용할 태그 목록
-                List<String> allowedTags = Arrays.asList("br", "strong", "em", "h2", "h3", "p", "ul", "ol", "li", "span");
+                // 1. 본문 끝에 붙어있는 기자 정보 제거 (DOM에서 직접 노드 제거)
+                List<Node> childNodes = articleBodyElement.childNodes();
+                if (!childNodes.isEmpty()) {
+                    // 마지막 노드를 가져옵니다.
+                    Node lastNode = childNodes.get(childNodes.size() - 1);
 
-                // 허용하지 않는 태그 unwrap (내용은 유지하고 태그만 제거)
-                clonedContent.select("*").forEach(element -> {
-                    String tagName = element.tagName();
-                    if (!allowedTags.contains(tagName)) {
-                        element.unwrap();
-                    } else if ("h2".equals(tagName)) {
-                        // h2 태그 내의 span 제거
-                        element.select("span").unwrap();
+                    // 마지막 노드가 "이름 기자 이메일" 형식의 텍스트 노드인지 확인
+                    if (lastNode instanceof TextNode) {
+                        String lastText = ((TextNode) lastNode).getWholeText().trim();
+
+                        if (lastText.matches("[가-힣]+\\s+기자\\s+.*@.*")) {
+                            // 1. 일치하는 텍스트 노드 제거
+                            lastNode.remove();
+
+                            // 2. 텍스트 노드 바로 앞의 <br> 태그도 확인 후 제거
+                            if (!articleBodyElement.childNodes().isEmpty()) {
+                                Node nodeBefore = articleBodyElement.lastChild();
+                                if (nodeBefore != null && nodeBefore.nodeName().equals("br")) {
+                                    nodeBefore.remove();
+                                }
+                            }
+                        }
                     }
-                });
-
-                // HTML 문자열 생성
-                content = clonedContent.html();
-
-                // 연속된 <br> 태그 정리 (3개 이상을 2개로)
-                content = content.replaceAll("(<br\\s*/?>){3,}", "<br><br>");
-
-                // 앞뒤 공백 제거
-                content = content.trim();
-
-                // 불필요한 문구 제거
-                content = content.replaceFirst("^\\s*\\([^)]+\\)\\s*", "").trim();
-
-                // 기자명 패턴 제거 (예: "신현보 한경닷컴 기자 greaterfool@hankyung.com")
-                content = content.replaceAll("\\s*[가-힣]+\\s+한경닷컴\\s+기자\\s+[a-zA-Z0-9_]+@hankyung\\.com\\s*$", "").trim();
-
-                // 저작권 문구 제거
-                int copyrightIndex = content.indexOf("한국경제신문");
-                if (copyrightIndex != -1) {
-                    content = content.substring(0, copyrightIndex).trim();
                 }
+
+                // 2. (선택 사항) 본문 시작의 (서울=연합뉴스) 같은 머릿말 제거
+                if (!articleBodyElement.childNodes().isEmpty()) {
+                    Node firstNode = articleBodyElement.childNode(0);
+
+                    // 첫 번째 노드가 텍스트 노드인 경우
+                    if (firstNode instanceof TextNode) {
+                        TextNode firstTextNode = (TextNode) firstNode;
+                        String firstText = firstTextNode.getWholeText();
+
+                        // 정규식으로 머릿말 부분만 제거
+                        String cleanedText = firstText.replaceFirst("^\\s*\\([^)]+\\)\\s*", "");
+
+                        // 텍스트 노드의 내용을 교체
+                        if (!firstText.equals(cleanedText)) {
+                            firstTextNode.text(cleanedText); // 텍스트 노드 내용 교체
+                        }
+                    }
+                }
+                // --- DOM 수정 끝 ---
+
+                // 3. Jsoup DOM에서 불필요한 요소를 제거했으므로,
+                //    이제 .html()을 호출하여 태그가 포함된 내용을 추출합니다.
+                content = articleBodyElement.html();
+
+                // 4. 저작권 문구 제거 로직은 불필요
+                //    (제공된 HTML 기준, #articletxt 외부에 있으므로)
+
             } else {
                 log.warn("Article body element not found.");
             }
 
-            // 기자 이름
+            // 기자 이름 (기존 코드와 동일)
             Element reporterElement = doc.selectFirst("div.author-list div.author a.item");
             String reporter = "";
 
