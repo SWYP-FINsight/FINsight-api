@@ -92,8 +92,7 @@ public class YNSArticleParser implements ArticleParser {
                 Element firstP = articleBodyElement.selectFirst("p");
                 if (firstP != null) {
                     Node firstChild = firstP.firstChild();
-                    if (firstChild instanceof TextNode) {
-                        TextNode firstTextNode = (TextNode) firstChild;
+                    if (firstChild instanceof TextNode firstTextNode) {
                         String firstText = firstTextNode.getWholeText();
 
                         // 정규식으로 머릿말 부분만 찾아서 교체

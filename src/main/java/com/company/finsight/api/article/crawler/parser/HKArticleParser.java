@@ -135,8 +135,7 @@ public class HKArticleParser implements ArticleParser {
                     Node firstNode = articleBodyElement.childNode(0);
 
                     // 첫 번째 노드가 텍스트 노드인 경우
-                    if (firstNode instanceof TextNode) {
-                        TextNode firstTextNode = (TextNode) firstNode;
+                    if (firstNode instanceof TextNode firstTextNode) {
                         String firstText = firstTextNode.getWholeText();
 
                         // 정규식으로 머릿말 부분만 제거
