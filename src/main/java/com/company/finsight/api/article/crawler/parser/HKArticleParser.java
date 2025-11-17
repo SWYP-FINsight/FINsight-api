@@ -14,6 +14,7 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
@@ -35,7 +36,7 @@ public class HKArticleParser implements ArticleParser {
                     Element locElement = urlElement.selectFirst("loc");
                     Element newsElement = urlElement.selectFirst("news|news");
                     Element imageElement = urlElement.selectFirst("image|image");
-                    
+
                     if (locElement == null || newsElement == null) {
                         log.warn("필수 요소가 없습니다. loc 또는 news");
                         continue;
@@ -94,20 +95,47 @@ public class HKArticleParser implements ArticleParser {
     public Mono<ArticleContentDto> parseArticleContent(String htmlContent) {
         return Mono.fromCallable(() -> {
             Document doc = Jsoup.parse(htmlContent);
-            
-            // 본문 추출
+
+            // 본문 추출 (포맷팅 유지)
             Element articleBodyElement = doc.selectFirst("div.article-body#articletxt");
             String content = "";
-            
+
             if (articleBodyElement != null) {
-                content = articleBodyElement.text();
-                
+                // 불필요한 요소 제거
+                articleBodyElement.select("figure, script, style, .ad-area-wrap, .box-cont").remove();
+
+                // HTML 클론 생성
+                Element clonedContent = articleBodyElement.clone();
+
+                // 허용할 태그 목록
+                List<String> allowedTags = Arrays.asList("br", "strong", "em", "h2", "h3", "p", "ul", "ol", "li", "span");
+
+                // 허용하지 않는 태그 unwrap (내용은 유지하고 태그만 제거)
+                clonedContent.select("*").forEach(element -> {
+                    String tagName = element.tagName();
+                    if (!allowedTags.contains(tagName)) {
+                        element.unwrap();
+                    } else if ("h2".equals(tagName)) {
+                        // h2 태그 내의 span 제거
+                        element.select("span").unwrap();
+                    }
+                });
+
+                // HTML 문자열 생성
+                content = clonedContent.html();
+
+                // 연속된 <br> 태그 정리 (3개 이상을 2개로)
+                content = content.replaceAll("(<br\\s*/?>){3,}", "<br><br>");
+
+                // 앞뒤 공백 제거
+                content = content.trim();
+
                 // 불필요한 문구 제거
                 content = content.replaceFirst("^\\s*\\([^)]+\\)\\s*", "").trim();
-                
+
                 // 기자명 패턴 제거 (예: "신현보 한경닷컴 기자 greaterfool@hankyung.com")
                 content = content.replaceAll("\\s*[가-힣]+\\s+한경닷컴\\s+기자\\s+[a-zA-Z0-9_]+@hankyung\\.com\\s*$", "").trim();
-                
+
                 // 저작권 문구 제거
                 int copyrightIndex = content.indexOf("한국경제신문");
                 if (copyrightIndex != -1) {
@@ -120,7 +148,7 @@ public class HKArticleParser implements ArticleParser {
             // 기자 이름
             Element reporterElement = doc.selectFirst("div.author-list div.author a.item");
             String reporter = "";
-            
+
             if (reporterElement != null) {
                 reporter = reporterElement.text();
             } else {
