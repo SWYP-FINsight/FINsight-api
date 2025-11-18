@@ -24,6 +24,27 @@ public class AiRequestBuilder {
             """, escapeJson(AiConstants.SYSTEM_PROMPT), escapeJson(mergedArticles));
 	}
 
+	public static String singleBuildRequestBody(String mergedArticles) {
+		return String.format("""
+            {
+              "messages": [
+                {
+                  "role": "system",
+                  "content": "%s"
+                },
+                {
+                  "role": "user",
+                  "content": "%s"
+                }
+              ],
+              "topP": 0.8,
+              "temperature": 0.5,
+              "maxTokens": 512,
+              "repetitionPenalty": 1.1
+            }
+            """, escapeJson(AiConstants.SINGLE_ARTICLE_PROMPT), escapeJson(mergedArticles));
+	}
+
 	private static String escapeJson(String text) {
 		return text
 			.replace("\\", "\\\\")
