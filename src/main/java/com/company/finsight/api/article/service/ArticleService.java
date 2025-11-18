@@ -116,6 +116,7 @@ public class ArticleService {
             article.getTitle(),
             article.getSource(),
             article.getPublishedAt(),
+            article.getThumbnailUrl(),
             article.getContent(),
             article.getReporter(),
 			finalUrl,
