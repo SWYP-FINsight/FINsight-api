@@ -29,10 +29,7 @@ public class AIClient {
 			.build();
 	}
 
-	public String summarize(List<String> articles) {
-		String merged = String.join("\n\n", articles);
-		String requestBody = AiRequestBuilder.buildRequestBody(merged);
-
+	private String executeSummarize(String requestBody) {
 		final StringBuilder resultBuilder = new StringBuilder();
 
 		Flux<String> stream = webClient.post()
@@ -42,13 +39,31 @@ public class AIClient {
 			.bodyToFlux(String.class);
 
 		stream.toStream().forEach(chunk -> {
-			if (chunk.contains("\"event\":\"result\"") || chunk.contains("\"finishReason\":\"stop\"")) return;
+			if (chunk.contains("\"event\":\"result\"") || chunk.contains("\"finishReason\":\"stop\"")) {
+				return;
+			}
 
 			String content = AiResponseParser.extractMessageContent(chunk);
 
-			if (!content.isEmpty()) resultBuilder.append(content);
+			if (!content.isEmpty()) {
+				resultBuilder.append(content);
+			}
 		});
 
 		return resultBuilder.toString().trim();
 	}
+
+	public String summarize(List<String> articles) {
+		String merged = String.join("\n\n", articles);
+		String requestBody = AiRequestBuilder.buildRequestBody(merged);
+
+		return executeSummarize(requestBody);
+	}
+
+	public String summarize(String article) {
+		String requestBody = AiRequestBuilder.singleBuildRequestBody(article);
+
+		return executeSummarize(requestBody);
+	}
+
 }
