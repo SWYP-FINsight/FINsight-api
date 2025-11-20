@@ -22,6 +22,9 @@ public class ArticleDetailDto {
     @Schema(description = "기사 발행 시간", example = "2024-07-29T09:00:00")
     private LocalDateTime timestamp;
 
+    @Schema(description = "썸네일", example = "https://img.example/123")
+    private String thumbnailUrl;
+
     @Schema(description = "기사 본문")
     private String content;
 
