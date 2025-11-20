@@ -111,6 +111,9 @@ jobs:
             CLOVA_API_URL=${{ secrets.CLOVA_API_URL }}
             CLOVA_API_KEY=${{ secrets.CLOVA_API_KEY }}
             CLOVA_REQUEST_ID=${{ secrets.CLOVA_REQUEST_ID }}
+            KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }}
+            KAKAO_CLIENT_SECRET=${{ secrets.KAKAO_CLIENT_SECRET }}
+            KAKAO_REDIRECT_URI=${{ secrets.KAKAO_REDIRECT_URI }}
             EOF
             
             # Docker Compose에서 사용할 환경변수 설정
