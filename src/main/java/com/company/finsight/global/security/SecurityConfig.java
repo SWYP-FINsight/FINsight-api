@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
 
     private final CustomLogoutSuccessHandler logoutSuccessHandler;
+    private final CustomOauth2UserService customOauth2UserService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -51,11 +52,19 @@ public class SecurityConfig {
                 .permitAll()
             )
 
+            .oauth2Login(oauth2 -> oauth2
+                .userInfoEndpoint(userInfo -> userInfo
+                    .userService(customOauth2UserService)
+                )
+                .defaultSuccessUrl("https://localhost:3000/auth/callback", true)
+            )
+
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/articles/**").permitAll()
                 .requestMatchers("/ai/**").permitAll()
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                .requestMatchers("/login/oauth2/**").permitAll() // OAuth2 리다이렉트 URL 허용
                 .anyRequest().authenticated()
             )
 
