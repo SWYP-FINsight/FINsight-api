@@ -128,12 +128,11 @@ public class YNSArticleParser implements ArticleParser {
                     }
                 }
 
-                // 5. 모든 정리가 끝난 DOM에서 HTML 추출
-                content = articleBodyElement.html();
+                // 5. 모든 정리가 끝난 DOM에서 텍스트만 추출
+                content = articleBodyElement.text();
 
-                // 6. (선택적) HTML 추출 후 빈 <p> 태그 정리
-                content = content.replaceAll("(?i)<p>\\s*(&nbsp;)?\\s*</p>", "");
-                content = content.replaceAll("(?i)<p>\\s*<br\\s*/?>\\s*</p>", "");
+                // 6. 필요시 여분의 공백 제거
+                content = content.replaceAll("\\s+", " ").trim();
 
 
             } else {

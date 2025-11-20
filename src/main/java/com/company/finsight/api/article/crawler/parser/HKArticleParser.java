@@ -150,8 +150,8 @@ public class HKArticleParser implements ArticleParser {
                 // --- DOM 수정 끝 ---
 
                 // 3. Jsoup DOM에서 불필요한 요소를 제거했으므로,
-                //    이제 .html()을 호출하여 태그가 포함된 내용을 추출합니다.
-                content = articleBodyElement.html();
+                //    이제 .text()를 호출하여 텍스트만 추출합니다.
+                content = articleBodyElement.text();
 
                 // 4. 저작권 문구 제거 로직은 불필요
                 //    (제공된 HTML 기준, #articletxt 외부에 있으므로)
