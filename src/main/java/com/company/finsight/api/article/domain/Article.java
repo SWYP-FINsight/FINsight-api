@@ -1,12 +1,23 @@
 package com.company.finsight.api.article.domain;
 
-import jakarta.persistence.*;
-import lombok.*;
+import java.time.LocalDateTime;
+
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.LocalDateTime;
+import com.company.finsight.api.ai.entity.AIArticle;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import lombok.Getter;
 
 @Entity
 @Table(name = "article")
@@ -59,7 +70,10 @@ public class Article {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    public Article() {}
+	@OneToOne(mappedBy = "article", cascade = CascadeType.REMOVE)
+	private AIArticle aiArticle;
+
+	public Article() {}
 
     /**
      * Article 엔티티 생성 (정적 팩토리 메서드)
