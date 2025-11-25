@@ -6,11 +6,6 @@ spring:
     username: ${POSTGRES_PROD_USERNAME}
     password: ${POSTGRES_PROD_PASSWORD}
 
-  session:
-    cookie:
-      same-site: none
-      secure: true
-
   jpa:
     show-sql: true
     hibernate:
@@ -46,6 +41,13 @@ clova:
 
 oauth2:
   success-url: ${OAUTH2_SUCCESS_URL}
+
+server:
+  servlet:
+    session:
+      cookie:
+        same-site: none
+        secure: true
 
 logging:
   level:
