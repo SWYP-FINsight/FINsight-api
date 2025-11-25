@@ -38,7 +38,7 @@ public class AiService {
 		return SummarizeResponseDto.toEntity(summary);
 	}
 
-	@Transactional(readOnly = true)
+	@Transactional
 	public SummarizeResponseDto summarize(SummarizeSingleRequestDto requestDto) {
 
 		Long id = requestDto.getArticleId();
@@ -62,8 +62,9 @@ public class AiService {
 		String summary = aiClient.summarize(content);
 
 		Article article = articleService.findArticleById(id);
-		AIArticle aiArticle = AIArticle.create(article, summary);
+		AIArticle aiArticle = new AIArticle(article, summary);
 
+		aiCache.put(id, aiArticle);
 		aiArticleRepository.save(aiArticle);
 
 		return SummarizeResponseDto.toEntity(summary);
