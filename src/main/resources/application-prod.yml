@@ -39,6 +39,9 @@ clova:
     key: ${CLOVA_API_KEY}
     request-id: ${CLOVA_REQUEST_ID}
 
+oauth2:
+  success-url: ${OAUTH2_SUCCESS_URL}
+
 logging:
   level:
     org.hibernate.SQL: warn
