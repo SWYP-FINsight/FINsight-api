@@ -43,9 +43,6 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
         // 세션을 즉시 저장
         session.setAttribute("SPRING_SECURITY_SAVED_REQUEST", null);
 
-        // 로그 출력 (디버깅용)
-        log.info("OAuth2 로그인 성공 - Session ID: {}", session.getId());
-
         // 리다이렉트
         getRedirectStrategy().sendRedirect(request, response, oauth2SuccessUrl);
     }
