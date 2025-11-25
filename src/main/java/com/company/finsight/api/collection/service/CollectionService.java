@@ -14,6 +14,7 @@ import com.company.finsight.api.collection.dto.CollectionCreateRequest;
 import com.company.finsight.api.collection.dto.CollectionInfo;
 import com.company.finsight.api.collection.dto.CollectionListResponse;
 import com.company.finsight.api.collection.dto.CollectionResponse;
+import com.company.finsight.api.collection.dto.CollectionUpdateRequest;
 import com.company.finsight.api.collection.entity.Collection;
 import com.company.finsight.api.collection.repository.CollectionRepository;
 import com.company.finsight.api.user.entity.User;
@@ -51,8 +52,7 @@ public class CollectionService {
 
     @Transactional(readOnly = true)
     public CollectionResponse getMyCollection(Long collectionId) {
-        Collection collection = collectionRepository.findById(collectionId)
-            .orElseThrow(() -> new CollectionException(CollectionErrorCode.COLLECTION_NOT_FOUND));
+        Collection collection = getCollection(collectionId);
 
         return CollectionResponse.from(collection);
     }
@@ -80,17 +80,36 @@ public class CollectionService {
     }
 
     @Transactional
+    public CollectionResponse update(Long collectionId, CollectionUpdateRequest request) {
+        Collection collection = getCollection(collectionId);
+
+        collection.update(
+            request.getCollectionName(),
+            request.getKeyword(),
+            request.getPeriodType(),
+            request.getSource()
+        );
+
+        return CollectionResponse.from(collection);
+    }
+
+    @Transactional
     public void deleteMyCollection(Long collectionId) {
-        Collection collection = collectionRepository.findById(collectionId)
-            .orElseThrow(() -> new CollectionException(CollectionErrorCode.COLLECTION_NOT_FOUND));
+        Collection collection = getCollection(collectionId);
 
         collectionRepository.delete(collection);
     }
 
+
+    // ======================= private 메서드 =======================
     private CollectionCond getCollectionCond(Long collectionId) {
-        Collection collection = collectionRepository.findById(collectionId)
-            .orElseThrow(() -> new CollectionException(CollectionErrorCode.COLLECTION_NOT_FOUND));
+        Collection collection = getCollection(collectionId);
 
         return CollectionCond.from(collection);
+    }
+
+    private Collection getCollection(Long collectionId) {
+        return collectionRepository.findById(collectionId)
+            .orElseThrow(() -> new CollectionException(CollectionErrorCode.COLLECTION_NOT_FOUND));
     }
 }
