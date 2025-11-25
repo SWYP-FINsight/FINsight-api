@@ -10,7 +10,11 @@ import com.company.finsight.api.ai.client.AIClient;
 import com.company.finsight.api.ai.dto.SummarizeRequestDto;
 import com.company.finsight.api.ai.dto.SummarizeResponseDto;
 import com.company.finsight.api.ai.dto.SummarizeSingleRequestDto;
+import com.company.finsight.api.ai.entity.AIArticle;
+import com.company.finsight.api.ai.repository.AiArticleRepository;
+import com.company.finsight.api.article.domain.Article;
 import com.company.finsight.api.article.service.ArticleService;
+import com.company.finsight.global.cache.AiArticleCache;
 import com.company.finsight.global.exception.business.article.ArticleErrorCode;
 import com.company.finsight.global.exception.business.article.ArticleException;
 
@@ -23,6 +27,9 @@ public class AiService {
 	private final ArticleService articleService;
 	private final AIClient aiClient;
 
+	private final AiArticleRepository  aiArticleRepository;
+	private final AiArticleCache aiCache;
+
 	@Transactional(readOnly = true)
 	public SummarizeResponseDto summarize(SummarizeRequestDto requestDto) {
 		List<String> contents = articleService.findContentsByIds(requestDto.getArticleIds());
@@ -34,11 +41,30 @@ public class AiService {
 	@Transactional(readOnly = true)
 	public SummarizeResponseDto summarize(SummarizeSingleRequestDto requestDto) {
 
-		List<String> contents = articleService.findContentsByIds(List.of(requestDto.getArticleId()));
+		Long id = requestDto.getArticleId();
+
+		Optional<AIArticle> cacheAiArticleOpt = aiCache.findArticleById(id);
+		if ( cacheAiArticleOpt.isPresent() ){
+			return SummarizeResponseDto.toEntity(cacheAiArticleOpt.get().getSummary());
+		}
+
+
+		Optional<AIArticle> dbAiArticleOpt =  aiArticleRepository.findById(id);
+		if ( dbAiArticleOpt.isPresent() ){
+			aiCache.put(id, dbAiArticleOpt.get());
+			return SummarizeResponseDto.toEntity(dbAiArticleOpt.get().getSummary());
+		}
+
+		List<String> contents = articleService.findContentsByIds(List.of(id));
 		Optional<String> contentOpt = contents.stream().findFirst();
 
 		String content = contentOpt.orElseThrow(()->new ArticleException(ArticleErrorCode.ARTICLE_NOT_FOUND));
 		String summary = aiClient.summarize(content);
+
+		Article article = articleService.findArticleById(id);
+		AIArticle aiArticle = AIArticle.create(article, summary);
+
+		aiArticleRepository.save(aiArticle);
 
 		return SummarizeResponseDto.toEntity(summary);
 	}
