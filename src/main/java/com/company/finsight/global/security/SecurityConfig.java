@@ -56,7 +56,7 @@ public class SecurityConfig {
                 .userInfoEndpoint(userInfo -> userInfo
                     .userService(customOauth2UserService)
                 )
-                .defaultSuccessUrl("https://localhost:3000/auth/callback", true)
+                .defaultSuccessUrl("http://localhost:3000/", true)
             )
 
             .authorizeHttpRequests(auth -> auth
