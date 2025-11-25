@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -18,6 +19,7 @@ import com.company.finsight.api.article.dto.ArticlesDto;
 import com.company.finsight.api.collection.dto.CollectionCreateRequest;
 import com.company.finsight.api.collection.dto.CollectionListResponse;
 import com.company.finsight.api.collection.dto.CollectionResponse;
+import com.company.finsight.api.collection.dto.CollectionUpdateRequest;
 import com.company.finsight.api.collection.service.CollectionService;
 import com.company.finsight.global.response.ApiResponse;
 import com.company.finsight.global.security.CustomUserDetails;
@@ -108,6 +110,26 @@ public class CollectionController {
             HttpStatus.OK,
             "컬렉션을 통한 기사 조회가 완료되었습니다.",
             collectionService.getArticlesByCollection(collectionId, cursor, size)
+        );
+    }
+
+    @Operation(summary = "내 컬렉션 수정", description = "특정 컬렉션의 정보를 수정합니다. (로그인 필요)")
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "컬렉션 수정 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증되지 않은 사용자"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "존재하지 않는 컬렉션")
+    })
+    @PutMapping("/{collectionId}")
+    public ResponseEntity<ApiResponse<CollectionResponse>> updateMyCollection(
+        @Parameter(description = "수정할 컬렉션의 ID", required = true, example = "1")
+        @PathVariable Long collectionId,
+        @Valid @RequestBody CollectionUpdateRequest request
+    ) {
+        return ApiResponse.success(
+            HttpStatus.OK,
+            "마이 컬렉션 수정이 완료되었습니다.",
+            collectionService.update(collectionId, request)
         );
     }
 

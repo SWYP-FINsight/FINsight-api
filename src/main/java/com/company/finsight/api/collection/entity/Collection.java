@@ -78,4 +78,11 @@ public class Collection {
             user
         );
     }
+
+    public void update(String collectionName, String keyword, PeriodType periodType, String source) {
+        this.collectionName = collectionName;
+        this.keyword = keyword;
+        this.periodType = periodType;
+        this.source = source;
+    }
 }
