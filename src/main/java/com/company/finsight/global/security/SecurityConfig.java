@@ -3,7 +3,6 @@ package com.company.finsight.global.security;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -24,6 +23,7 @@ public class SecurityConfig {
 
     private final CustomLogoutSuccessHandler logoutSuccessHandler;
     private final CustomOauth2UserService customOauth2UserService;
+    private final CustomOAuth2SuccessHandler oAuth2SuccessHandler;
 
     @Value("${oauth2.success-url}")
     private String oauth2SuccessUrl;
@@ -61,7 +61,7 @@ public class SecurityConfig {
                 .userInfoEndpoint(userInfo -> userInfo
                     .userService(customOauth2UserService)
                 )
-                .defaultSuccessUrl(oauth2SuccessUrl, true)
+                .successHandler(oAuth2SuccessHandler)
             )
 
             .authorizeHttpRequests(auth -> auth
