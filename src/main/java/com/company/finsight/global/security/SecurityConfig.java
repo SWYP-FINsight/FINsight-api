@@ -13,6 +13,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import lombok.RequiredArgsConstructor;
 
 @Configuration
@@ -22,6 +24,9 @@ public class SecurityConfig {
 
     private final CustomLogoutSuccessHandler logoutSuccessHandler;
     private final CustomOauth2UserService customOauth2UserService;
+
+    @Value("${oauth2.success-url}")
+    private String oauth2SuccessUrl;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -56,7 +61,7 @@ public class SecurityConfig {
                 .userInfoEndpoint(userInfo -> userInfo
                     .userService(customOauth2UserService)
                 )
-                .defaultSuccessUrl("http://localhost:3000/", true)
+                .defaultSuccessUrl(oauth2SuccessUrl, true)
             )
 
             .authorizeHttpRequests(auth -> auth

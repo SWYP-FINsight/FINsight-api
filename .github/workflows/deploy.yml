@@ -114,6 +114,7 @@ jobs:
             KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }}
             KAKAO_CLIENT_SECRET=${{ secrets.KAKAO_CLIENT_SECRET }}
             KAKAO_REDIRECT_URI=${{ secrets.KAKAO_REDIRECT_URI }}
+            OAUTH2_SUCCESS_URL=${{ secrets.OAUTH2_SUCCESS_URL }}
             EOF
             
             # Docker Compose에서 사용할 환경변수 설정
