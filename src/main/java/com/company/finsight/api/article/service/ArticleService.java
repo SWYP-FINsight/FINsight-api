@@ -306,4 +306,15 @@ public class ArticleService {
         }
         return String.join(", ", keywords);
     }
+
+	/**
+	 * 기사 ID 로 기사 조회
+	 *
+	 * @param id 기사 ID
+	 * @return 기사
+	 */
+	public Article findArticleById(Long id) {
+		return articleRepository.findById(id)
+			.orElseThrow(() -> new ArticleException(ArticleErrorCode.ARTICLE_NOT_FOUND));
+	}
 }
