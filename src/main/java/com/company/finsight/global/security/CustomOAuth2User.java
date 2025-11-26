@@ -15,7 +15,7 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public class CustomOAuth2User implements OAuth2User {
+public class CustomOAuth2User implements OAuth2User, PrincipalUser {
 
     private final User user;
     private final Map<String, Object> attributes;
@@ -34,6 +34,15 @@ public class CustomOAuth2User implements OAuth2User {
 
     @Override
     public String getName() {
+        return user.getUsername();
+    }
+
+    // CustomUserDetails와 호환성을 위해 추가
+    public Long getUserId() {
+        return user.getId();
+    }
+
+    public String getUsername() {
         return user.getUsername();
     }
 }

@@ -15,7 +15,7 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public class CustomUserDetails implements UserDetails {
+public class CustomUserDetails implements UserDetails, PrincipalUser {
 
     private final Long userId;
     private final String username;

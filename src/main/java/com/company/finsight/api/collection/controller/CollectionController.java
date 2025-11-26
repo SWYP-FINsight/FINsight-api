@@ -22,7 +22,7 @@ import com.company.finsight.api.collection.dto.CollectionResponse;
 import com.company.finsight.api.collection.dto.CollectionUpdateRequest;
 import com.company.finsight.api.collection.service.CollectionService;
 import com.company.finsight.global.response.ApiResponse;
-import com.company.finsight.global.security.CustomUserDetails;
+import com.company.finsight.global.security.PrincipalUser;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -47,13 +47,13 @@ public class CollectionController {
     })
     @PostMapping
     public ResponseEntity<ApiResponse<CollectionResponse>> create(
-        @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails,
+        @Parameter(hidden = true) @AuthenticationPrincipal PrincipalUser user,
         @Valid @RequestBody CollectionCreateRequest request
     ) {
         return ApiResponse.success(
             HttpStatus.CREATED,
             "컬렉션 등록이 완료되었습니다.",
-            collectionService.create(userDetails.getUserId(), request)
+            collectionService.create(user.getUserId(), request)
         );
     }
 
@@ -81,12 +81,12 @@ public class CollectionController {
     })
     @GetMapping
     public ResponseEntity<ApiResponse<CollectionListResponse>> getMyCollections(
-        @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails
+        @Parameter(hidden = true) @AuthenticationPrincipal PrincipalUser user
     ) {
         return ApiResponse.success(
             HttpStatus.OK,
             "마이 컬렉션 조회가 완료되었습니다.",
-            collectionService.getMyCollections(userDetails.getUserId())
+            collectionService.getMyCollections(user.getUserId())
         );
     }
 
