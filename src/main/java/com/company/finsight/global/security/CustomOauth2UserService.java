@@ -42,15 +42,31 @@ public class CustomOauth2UserService extends DefaultOAuth2UserService {
         // 카카오 사용자 ID
         String providerId = String.valueOf(attributes.get("id"));
 
+        // 카카오 닉네임 추출
+        String nickname = extractKakaoNickname(attributes);
+
         // DB에서 사용자 조회 또는 생성
         User user = userRepository.findByProviderId(providerId)
             .orElseGet(() -> {
                 // 새로운 사용자 생성
-                String username = "kakao_" + providerId;
-                User newUser = User.createOAuthUser(username, Provider.KAKAO, providerId);
+                User newUser = User.createOAuthUser(nickname, Provider.KAKAO, providerId);
                 return userRepository.save(newUser);
             });
 
         return new CustomOAuth2User(user, oAuth2User.getAttributes());
+    }
+
+    private String extractKakaoNickname(Map<String, Object> attributes) {
+        // kakao_account.profile.nickname 추출
+        Map<String, Object> kakaoAccount = (Map<String, Object>)attributes.get("kakao_account");
+        if (kakaoAccount != null) {
+            Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get("profile");
+            if (profile != null && profile.get("nickname") != null) {
+                return (String) profile.get("nickname");
+            }
+        }
+
+        // 닉네임을 가져올 수 없는 경우 기본값
+        return "kakao_" + attributes.get("id");
     }
 }
