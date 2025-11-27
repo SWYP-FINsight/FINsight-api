@@ -20,6 +20,12 @@ FINsight와 함께라면 간단한 키워드 설정만으로 나에게 꼭 필�
 
 해당 프로젝트는 핀사이트(Finsight) 서비스의 백엔드 시스템을 구축한 개인/팀 프로젝트로, 안정적인 API 제공, 유연한 확장성, 운영 편의성을 목표로 설계되었습니다.
 
+### 📹 [시연 영상](https://drive.google.com/file/d/1nd-KBvB9GmLw1KwVWOmDVQSmhXiY1eGg/view?usp=sharing) 
+여기에 영상 들어갈 예정
+
+### 📄 [발표 자료](https://docs.google.com/presentation/d/1ewIp6Ewz8a023O6pvgxxVSg6ij-5F7TX/edit?usp=drive_link&ouid=102263935085836178064&rtpof=true&sd=true)
+여기에 피피티 들어갈 예정
+
 ---
 ## 주요 기능
 | 기능 1                               | 기능 2                               |
@@ -37,36 +43,52 @@ FINsight와 함께라면 간단한 키워드 설정만으로 나에게 꼭 필�
 - 다수 / 단일 기사 AI 요약 기능 제공
 
 ---
-## 기술스택
-```yaml
-Backend
-    Java 17
-    Spring Boot
-    Spring Data JPA
-    Spring Session
-```
+## 🛠 기술 스택
 
-```yaml
-DB
-    PostgreSQL
-```
+<div align="center">
 
-```yaml
-Infra & DevOps
-    Docker / Docker Compose
-    NCP ( Naver Cloud Platform )
-```
+### Backend
+<img src="https://img.shields.io/badge/Java%2017-007396?style=for-the-badge&logo=java&logoColor=white">
+<img src="https://img.shields.io/badge/Spring%20Boot%203.5.6-6DB33F?style=for-the-badge&logo=springboot&logoColor=white">
+<img src="https://img.shields.io/badge/Spring%20Security-6DB33F?style=for-the-badge&logo=springsecurity&logoColor=white">
+<img src="https://img.shields.io/badge/Spring%20Data%20JPA-6DB33F?style=for-the-badge&logo=spring&logoColor=white">
+<img src="https://img.shields.io/badge/QueryDSL%205.0.0-0078D4?style=for-the-badge&logo=amazondynamodb&logoColor=white">
+<img src="https://img.shields.io/badge/OAuth%202.0-EB5424?style=for-the-badge&logo=auth0&logoColor=white">
 
-```yaml
-AI / Crawling
-    Clova Studio API
-```
-```yaml
-Tooling
-  GitHub / GitHub Projects
-  IntelliJ
-  Postman
-```
+### Database & Cache
+<img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white">
+<img src="https://img.shields.io/badge/NCP%20Cloud%20DB-03C75A?style=for-the-badge&logo=naver&logoColor=white">
+<img src="https://img.shields.io/badge/In--Memory%20Cache-6DB33F?style=for-the-badge&logo=spring&logoColor=white">
+
+### Infrastructure & DevOps
+<img src="https://img.shields.io/badge/Naver%20Cloud%20Platform-03C75A?style=for-the-badge&logo=naver&logoColor=white">
+<img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white">
+<img src="https://img.shields.io/badge/Docker%20Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white">
+<img src="https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white">
+<img src="https://img.shields.io/badge/GitHub%20Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white">
+
+### Monitoring
+<img src="https://img.shields.io/badge/NCP%20Monitoring-03C75A?style=for-the-badge&logo=naver&logoColor=white">
+
+### Tools & Libraries
+<img src="https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black">
+<img src="https://img.shields.io/badge/Jsoup-437291?style=for-the-badge&logo=jsoup&logoColor=white">
+<img src="https://img.shields.io/badge/WebFlux-6DB33F?style=for-the-badge&logo=spring&logoColor=white">
+<img src="https://img.shields.io/badge/Gradle-02303A?style=for-the-badge&logo=gradle&logoColor=white">
+
+### Development Tools
+<img src="https://img.shields.io/badge/IntelliJ%20IDEA-000000?style=for-the-badge&logo=intellijidea&logoColor=white">
+<img src="https://img.shields.io/badge/Postman-FF6C37?style=for-the-badge&logo=postman&logoColor=white">
+
+### Collaboration
+<img src="https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=git&logoColor=white">
+<img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white">
+<img src="https://img.shields.io/badge/Notion-000000?style=for-the-badge&logo=notion&logoColor=white">
+<img src="https://img.shields.io/badge/HackMD-000000?style=for-the-badge&logo=markdown&logoColor=white">
+<img src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white">
+
+</div>
+
 ---
 ## DB / ERD 구조
 ![img.png](img/ERD.png)
@@ -363,4 +385,27 @@ public class AiArticleCache {
 
 </details>
 
-## 프로젝트에서 담당한 역할
+## 🧑‍🤝‍🧑 팀원 소개
+<br>
+
+|                                 **유성안**                                 |                                  **김정인**                                  |                 [**이주연**](https://github.com/mmeat512)                 |                  [**손상희**](https://github.com/kses1010)                   |                  [**김도균**](https://github.com/DOGYUN0903)                  |            [**이준영**](https://github.com/LJY981008)             |            [**장군호**](https://github.com/NewJKH)             |
+|:-----------------------------------------------------------------------:|:-------------------------------------------------------------------------:|:-------------------------------------------------------------------------:|:-----------------------------------------------------------------------:|:-----------------------------------------------------------------------:|:-------------------------------------------------------------------:|:-------------------------------------------------------------------:|
+| <img src="readmeImg/sexy_dogyun_profile.png" width="150" height="200"/> | <img src="readmeImg/sexy_nagyeong_profile.png" width="150" height="200"/> | <img src="readmeImg/sexy_jaeheoyn_profile.png" width="150" height="200"/> | <img src="readmeImg/sexy_koonho_profile.png" width="150" height="200"/> | <img src="readmeImg/sexy_minook_profile.png" width="150" height="200"/> | <img src="readmeImg/yongjun_profile.png" width="150" height="200"/> | <img src="readmeImg/yongjun_profile.png" width="150" height="200"/> |
+|                                 **PM**                                  |                               **PD(디자이너)**                                |                                  **FE**                                   |                                 **FE**                                  |                                 **BE**                                  |                               **BE**                                |                               **BE**                                |
+
+## 😃 팀원 역할
+
+- **유성안**
+    - 팀장, 기획, 와이어프레임 설계, 발표, 피피티 제작
+- **김정인**
+    - 와이어프레임 디자인, 컴포넌트 디자인
+- **이주연**
+    - UI 개발 및 API 연동
+- **손상희**
+    - UI 개발 및 API 연동
+- **김도균**
+    - API 개발, 서버 배포
+- **이준영**
+    - API 개발, 서버 배포
+- **장군호**
+    - API 개발, 서버 배포
