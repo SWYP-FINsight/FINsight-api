@@ -590,4 +590,4 @@ Flux.fromIterable(articleList) // 1. for 루프 대체
 - **이준영**
     - API 개발, 서버 배포
 - **장군호**
-    - API 개발, 서버 배포
+    - AI 도메인 개발
