@@ -385,13 +385,84 @@ public class AiArticleCache {
 
 </details>
 
+<details>
+<summary><b>크롤링 로직 리팩토링: for + Thread.sleep에서 Flux.concatMap으로 전환</b></summary>
+
+### 개편 배경
+기존 크롤링 로직은 `for` 루프 내에서 리액티브 스트림을 `subscribe()`하고, `Thread.sleep()`으로 딜레이를 주는 혼합된 구조
+
+```java
+for(ArticleSummaryDto articleSummary : articleList) {
+    // 1. 루프 내에서 subscribe() 호출
+    crawlerClient.callContent(...)
+            .publishOn(Schedulers.boundedElastic())
+            .doOnNext(...) // DB 저장 로직
+            .subscribe(); // <--- 문제 1
+
+    // 2. 메인 스레드 강제 블로킹
+    try {
+        Thread.sleep(randomNumber); // <--- 문제 2
+    } catch (InterruptedException e) { ... }
+}
+```
+
+- **문제 1 (루프 내 `subscribe`):** `for` 루프는 `subscribe()`가 반환하는 비동기 작업(Mono)의 **완료를 기다리지 않는다.** 즉시 다음 루프로 넘어간다.
+- **문제 2 (`Thread.sleep`):** `Thread.sleep()`은 비동기 작업의 완료를 기다리는 것이 아니라, **메인 스레드를 강제로 블로킹한다**.
+- **결과:**
+    1. `for` 루프가 돌면서 모든 크롤링 작업을 `boundedElastic` 스레드 풀에 거의 **동시에 병렬로** 던짐. (순차 실행 실패)
+    2. 메인 스레드는 크롤링 작업과는 아무 상관 없이, 혼자 `Thread.sleep`을 반복하며 스레드 자원을 낭비.
+    3. "하나씩 크롤링하고 딜레이"하려던 **원래 의도와 정반대로 동작**.
+
+### 개편 과정
+
+모든 로직을 선언적인 리액티브 스트림으로 통합하여, `for` 루프와 `Thread.sleep`을 완전히 제거.
+
+- 개선 코드
+
+```java
+Flux.fromIterable(articleList) // 1. for 루프 대체
+        .concatMap(articleSummary -> // 2. 순차 실행 보장
+                crawlerClient.callContent(...)
+                        .flatMap(...)
+                        .publishOn(Schedulers.boundedElastic())
+                        .doOnNext(...) // DB 저장 로직
+                        .onErrorResume(error -> Mono.empty()) // 4. 안정성
+                        .then(Mono.delay(...)) // 3. 비차단 딜레이
+        )
+        .subscribe(); // 5. 단일 구독
+```
+
+**1. `Flux.fromIterable(articleList)`:** `for` 루프를 대체하여 리스트를 리액티브 스트림으로 변환.
+
+**2. `concatMap`:** `flatMap`과 달리, **이전 Mono(내부 스트림)가 완료될 때까지 다음 Mono를 구독(시작)하지 않는다.** 이것이 하나씩 순서대로 실행하는 것을 100% 보장.
+
+**3. `Mono.delay()`:** `Thread.sleep()`을 대체하는 논블로킹 **딜레이**. 스레드를 점유하지 않고 리액터 스케줄러를 통해 효율적으로 대기한다.
+
+**4. `onErrorResume(error -> Mono.empty())`:** 특정 기사 크롤링에 실패하더라도, 에러를 로깅하고(`doOnError`) 스트림이 중단되지 않도록 하여 **전체 작업의 안정성을 향상.**
+
+**5. 단일 `subscribe()`:** 모든 체인의 마지막에 `subscribe()`를 한 번만 호출하여 전체 스트림을 활성화.
+
+### 3. 개선 결과
+
+- **완벽한 순차 실행 보장:**  
+  `concatMap`을 통해 **[ (1번 기사 크롤링 + DB 저장) + 딜레이 ]** 작업이 **완전히 완료되어야만** 2번 기사 작업이 시작되도록 하여, 원래의 비즈니스 요구사항을 정확히 구현.
+
+- **압도적인 자원 효율성:**  
+  스레드를 붙잡고 낭비하는 `Thread.sleep()`을 제거하고, 리소스를 점유하지 않는 `Mono.delay()`로 변경하여 **매우 적은 리소스로도 안정적인 대기**가 가능해졌다.
+
+- **안정성 및 예측 가능성:**  
+  `onErrorResume`을 통해 일부 항목의 실패가 전체 배치 작업을 중단시키는 문제를 해결. 또한, 모든 로직이 하나의 스트림으로 통합되어 동작을 예측하고 디버깅하기 쉬워짐.
+
+</details>
+
+
 ## 🧑‍🤝‍🧑 팀원 소개
 <br>
 
-|                                 **유성안**                                 |                                  **김정인**                                  |                 [**이주연**](https://github.com/mmeat512)                 |                  [**손상희**](https://github.com/kses1010)                   |                  [**김도균**](https://github.com/DOGYUN0903)                  |            [**이준영**](https://github.com/LJY981008)             |            [**장군호**](https://github.com/NewJKH)             |
-|:-----------------------------------------------------------------------:|:-------------------------------------------------------------------------:|:-------------------------------------------------------------------------:|:-----------------------------------------------------------------------:|:-----------------------------------------------------------------------:|:-------------------------------------------------------------------:|:-------------------------------------------------------------------:|
-| <img src="readmeImg/sexy_dogyun_profile.png" width="150" height="200"/> | <img src="readmeImg/sexy_nagyeong_profile.png" width="150" height="200"/> | <img src="readmeImg/sexy_jaeheoyn_profile.png" width="150" height="200"/> | <img src="readmeImg/sexy_koonho_profile.png" width="150" height="200"/> | <img src="readmeImg/sexy_minook_profile.png" width="150" height="200"/> | <img src="readmeImg/yongjun_profile.png" width="150" height="200"/> | <img src="readmeImg/yongjun_profile.png" width="150" height="200"/> |
-|                                 **PM**                                  |                               **PD(디자이너)**                                |                                  **FE**                                   |                                 **FE**                                  |                                 **BE**                                  |                               **BE**                                |                               **BE**                                |
+|                     **유성안**                      |                                  **김정인**                                  |                 [**이주연**](https://github.com/mmeat512)                 |                  [**손상희**](https://github.com/kses1010)                   |                  [**김도균**](https://github.com/DOGYUN0903)                  |     [**이준영**](https://github.com/LJY981008)      |       [**장군호**](https://github.com/NewJKH)       |
+|:------------------------------------------------:|:-------------------------------------------------------------------------:|:-------------------------------------------------------------------------:|:-----------------------------------------------------------------------:|:-----------------------------------------------------------------------:|:------------------------------------------------:|:------------------------------------------------:|
+| <img src="img/익명.png" width="150" height="200"/> | <img src="img/익명.png" width="150" height="200"/> | <img src="img/익명.png" width="150" height="200"/> | <img src="img/익명.png" width="150" height="200"/> | <img src="img/김도균.png" width="150" height="200"/> | <img src="img/익명.png" width="150" height="200"/> | <img src="img/장군호.png" width="150" height="200"/> |
+|                      **PM**                      |                               **PD(디자이너)**                                |                                  **FE**                                   |                                 **FE**                                  |                                 **BE**                                  |                      **BE**                      |                      **BE**                      |
 
 ## 😃 팀원 역할
 
