@@ -4,8 +4,14 @@
 1. [프로젝트 소개](#-핀사이트-finsight)
 2. [프로젝트 개요](#-프로젝트-개요)
 3. [주요 기능](#-주요-기능)
-4. [데이터베이스 ERD](#-데이터베이스-ERD)
-5. [팀원 소개](#-팀원-소개)
+4. [기술 스택](#-기술-스택)
+5. [데이터베이스 ERD](#-db--erd-구조)
+6. [시스템 아키텍처](#-시스템-아키텍쳐)
+7. [기술적 의사 결정](#-기술적-의사-결정)
+8. [트러블슈팅](#-트러블슈팅)
+9. [성능 개선](#-성능-개선)
+10. [팀원 소개](#-팀원-소개)
+11. [팀원 역할](#-팀원-역할)
 
 ## 📰 핀사이트 (Finsight)
 ### 스위프 웹 11기 - 5팀: 재태크 관련 개인 맞춤형 뉴스 기사 콜렉터
@@ -20,11 +26,9 @@ FINsight와 함께라면 간단한 키워드 설정만으로 나에게 꼭 필�
 
 해당 프로젝트는 핀사이트(Finsight) 서비스의 백엔드 시스템을 구축한 개인/팀 프로젝트로, 안정적인 API 제공, 유연한 확장성, 운영 편의성을 목표로 설계되었습니다.
 
-### 📹 [시연 영상](https://drive.google.com/file/d/1nd-KBvB9GmLw1KwVWOmDVQSmhXiY1eGg/view?usp=sharing) 
-여기에 영상 들어갈 예정
+### 📹 [시연 영상](https://drive.google.com/file/d/1LJVVDCgpoGTpMhbZ87ZS_BcEbpflJdur/view?usp=sharing)
 
-### 📄 [발표 자료](https://docs.google.com/presentation/d/1ewIp6Ewz8a023O6pvgxxVSg6ij-5F7TX/edit?usp=drive_link&ouid=102263935085836178064&rtpof=true&sd=true)
-여기에 피피티 들어갈 예정
+### 📄 [발표 자료](https://drive.google.com/file/d/18kO5jPJxw_wwk5yMACMTxmt0vkhgTa0f/view?usp=sharing)
 
 ---
 ## 주요 기능
@@ -90,11 +94,11 @@ FINsight와 함께라면 간단한 키워드 설정만으로 나에게 꼭 필�
 </div>
 
 ---
-## DB / ERD 구조
+## 📊 DB / ERD 구조
 ![img.png](img/ERD.png)
 
 ---
-## 시스템 아키텍쳐
+## 🏗️ 시스템 아키텍쳐
 ![img_1.png](img/아키텍쳐.png)
 
 ---
@@ -336,9 +340,116 @@ TTL로 단순 삭제하는 것보다,
 
 </details>
 
-## 트러블슈팅
+## ⚡ 트러블슈팅
+<details>
+<summary><b>리액티브 프로그래밍에서의 이중 구독 문제 해결</b></summary>
 
-## 성능 개선
+### 📌 문제 상황
+스케줄러 기반 크롤링 작업에서 `callContent()` 메서드 내부에서 별도로 `.subscribe()`를 호출하는 **중첩 구독(Nested Subscribe)** 패턴으로 인해 다음과 같은 문제가 발생했습니다:
+
+1. **Fire-and-Forget**: 외부 스트림이 내부 작업 완료를 알 수 없음
+2. **스케줄링 스레드 조기 종료**: 실제 작업은 진행 중인데 스케줄러는 완료로 간주
+3. **작업 중첩**: `fixedRate`로 인해 이전 작업 미완료 상태에서 새 작업 시작
+4. **동시성 제어 실패**: 의도한 병렬/순차 처리가 제대로 작동하지 않음
+
+### 🔍 Before vs After 비교
+
+| 항목 | Before (문제점) | After (해결책) |
+|------|----------------|---------------|
+| **구독** | 중첩된 `.subscribe()` | 단일 체인 + 마지막 `.blockLast()` |
+| **스케줄링** | `fixedRate` + 즉시 리턴 | `fixedDelay` + `.blockLast()`로 완료 대기 |
+| **작업 제어** | "Fire-and-Forget" | 모든 작업의 완료/실패를 메인 스레드가 인지 |
+| **중복 실행** | 크롤링 시간 > 15분이면 중복 실행 | 절대 중복 없음 (완료 후 15분 대기) |
+| **동시성** | 제어 불가 (N개 카테고리 동시 실행) | `flatMap(..., 5)`로 최대 5개 병렬 실행 |
+| **순차성** | 5개 병렬 `concatMap` (의도와 다름) | 각 병렬 작업 내 `concatMap` (의도대로) |
+
+### ❌ Before: 중첩 구독 패턴
+```java
+@Scheduled(fixedRate = 900000)
+public void scheduledCrawlYNS() {
+    log.info("스케줄링 시작...");
+    Flux.fromArray(YNSCategory.values())
+            .flatMap(category ->
+                    crawlerClient.call(category.getPath())
+                            .flatMap(...)
+                            .doOnNext(this::callContent) // 1. callContent 호출
+                            .doOnError(...)
+                            .onErrorResume(...)
+                            .then()
+            , 5)
+            .subscribe(); // 2. 외부 스트림 구독
+    
+    log.info("스케줄링 종료..."); // 3. 이 로그가 '즉시' 찍힘
+}
+
+private void callContent(List<ArticleSummaryDto> articleList) {
+    Flux.fromIterable(articleList)
+            .concatMap(...) // 4. 내부 스트림 정의
+            .subscribe(); // 5. 내부에서 별도 구독 (문제의 핵심)
+}
+```
+
+**문제점:**
+- `callContent` 내부의 `.subscribe()`는 리액티브 스트림의 대표적인 **안티패턴**
+- **"Fire-and-Forget"**: `doOnNext(this::callContent)`는 메서드를 호출할 뿐, 내부 작업이 언제 끝나는지 알 수 없음
+- **체인 단절**: 외부 스트림과 내부 스트림의 연결이 끊어짐
+- `subscribe()`는 비동기 작업의 "시작"만 트리거하므로, `log.info("스케줄링 종료")`가 1초도 안 되어 찍힘
+- `fixedRate = 900000` (15분)은 이전 작업 **시작** 후 15분이면 다음 작업 시작 → **작업 중첩 발생**
+
+### ✅ After: 단일 리액티브 체인
+```java
+@Scheduled(fixedDelay = 900000) // fixedRate → fixedDelay 변경
+public void scheduledCrawlYNS() {
+    log.info("스케줄링 시작...");
+    Flux.fromArray(YNSCategory.values())
+            .flatMap(category ->
+                            fetchCategoryArticleList(category)
+                                    .flatMap(this::fetchArticleContents) // Mono<Void> 반환
+                                    .doOnError(...)
+                                    .onErrorResume(e -> Mono.empty())
+                    , MAX_CONCURRENCY) // 최대 5개 병렬 실행
+            .doOnComplete(...)
+            .doOnError(...)
+            .blockLast(); // 모든 작업 완료까지 대기 (핵심)
+
+    log.info("스케줄링 종료."); // 이제 정말 작업이 다 끝난 후 찍힘
+}
+
+// Mono<Void> 반환 (내부 subscribe 제거)
+private Mono<Void> fetchArticleContents(List<ArticleSummaryDto> articleList) {
+    return Flux.fromIterable(articleList)
+            .concatMap(...) // 순차 처리
+            .then(); // Mono<Void>를 반환하여 '완료' 신호 전달
+}
+```
+
+### 🔧 해결 방법
+
+#### 1. 단일 리액티브 체인 + `.blockLast()` (핵심)
+- `fetchArticleContents`가 `.subscribe()` 대신 `.then()`으로 `Mono<Void>` 반환
+- 모든 Mono/Flux를 **하나의 거대한 스트림 체인**으로 연결
+- `.blockLast()`: 스케줄러 스레드를 붙잡아두고 **모든 작업 완료까지 대기**
+- 결과: `log.info("스케줄링 종료")`가 진짜 완료 후에 찍힘
+
+#### 2. `fixedDelay`로 변경
+- `fixedDelay = 900000`: 이전 작업 **완료** 후 15분 뒤에 다음 작업 시작
+- `.blockLast()` 덕분에 크롤링이 30분 걸리면 30분 완료 + 15분 대기
+- **작업 중첩 위험 원천 차단**
+
+#### 3. 의도한 동시성/순차성 확보
+- `flatMap(..., MAX_CONCURRENCY)`: 최대 5개 카테고리 크롤링이 **병렬** 실행
+- `concatMap` (내부): 각 카테고리 내 기사는 **순차** 처리 (polite crawling)
+- 결과: **최대 5개의 기사 본문**이 동시 처리되며, 각 기사 처리 후 5~15초 지연
+
+### 💡 효과
+- ✅ **작업 중첩 방지**: `fixedDelay` + `.blockLast()`로 안전한 주기 보장
+- ✅ **정확한 완료 시점 파악**: 스케줄러가 실제 완료를 인지
+- ✅ **의도한 동시성 제어**: 최대 5개 병렬 + 각 카테고리 내 순차 처리
+- ✅ **에러 추적 가능**: 단일 체인으로 모든 에러 캡처
+
+</details>
+
+## 🚀 성능 개선
 <details>
 <summary><b>캐싱을 통한 성능 개선</b></summary>
 
